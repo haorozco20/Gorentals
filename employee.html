@@ -6,16 +6,16 @@
 @media(max-width:640px){html,body{overflow-x:hidden}main{margin:0 auto;padding:12px 12px calc(25px + env(safe-area-inset-bottom))}h1{font-size:23px}section{margin-top:12px;padding:17px 14px;border-radius:12px}h2{font-size:18px}.grid{grid-template-columns:1fr}input,textarea,select{font-size:16px;min-height:46px}#login button,#rental button{width:100%;margin:10px 0 0}#signout{width:auto!important}#status{position:relative;line-height:1.5}}</style></head>
 <body><main><h1>GO Rentals</h1><p>Employee portal · Report a new rental / Reportar un alquiler</p>
 <section id="auth"><h2>Employee sign in</h2><form id="login"><label>Email<input id="email" type="email" required autocomplete="email"></label><label>Password<input id="password" type="password" required minlength="8" autocomplete="current-password"></label><button type="submit">Sign in</button><button class="alt" type="button" id="signup">Create employee account</button></form><p class="muted">After registering, verify your email. The owner must approve your account before you can send reports.</p></section>
-<section id="report" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>New rental report</h2><button class="alt" id="signout" type="button">Sign out</button></div><p>Submit the rental details to the owner for review. This does not confirm a booking or reserve a vehicle.</p>
+<section id="report" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>New rental report</h2><button class="alt" id="signout" type="button">Sign out</button></div><p>Create a rental directly in GO Rentals. You can edit rentals you submitted below.</p>
 <form id="rental">
-<label>Vehicle license plate / Placa<input name="vehicle_plate" required minlength="2" maxlength="30" placeholder="M411649"></label>
+<label>Vehicle / Vehículo<select id="vehicle" name="vehicle_plate" required><option value="">Loading vehicles…</option></select></label><label>License plate / Placa<input id="plate" readonly placeholder="Selected automatically"></label>
 <label>Customer name / Nombre<input name="customer_name" required minlength="2" maxlength="140"></label>
 <div class="grid"><div><label>Country code</label><select id="code"><option value="+505">🇳🇮 Nicaragua +505</option><option value="+1">🇺🇸 USA +1</option></select></div><div><label>Customer phone / Teléfono</label><input name="phone_local" type="tel" maxlength="30" placeholder="8888 8888"></div></div>
 <label>Customer email / Correo<input name="customer_email" type="email" maxlength="254"></label>
 <div class="grid"><div><label>Pickup / Entrega<input name="pickup" type="date" required></div><div><label>Return / Devolución<input name="dropoff" type="date" required></div></div>
 <div class="grid"><div><label>Daily rate (USD)<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Payment collected (USD)<input name="paid" type="number" min="0" max="1000000" step="0.01"></div></div>
 <label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
-<button id="send" type="submit">Submit rental report</button></form></section>
+<button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button></form><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -23,9 +23,39 @@
 const OWNER='98eed9ac-b4c6-4c66-8298-923c85d49b94';
 const status=document.querySelector('#status'),auth=document.querySelector('#auth'),report=document.querySelector('#report');
 const say=s=>status.textContent=s;
+let editing=null,vehicles=[],myRentals=[];
+const vehicleSelect=document.querySelector('#vehicle'),plate=document.querySelector('#plate'),rentalForm=document.querySelector('#rental');
+const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+vehicleSelect.onchange=()=>{plate.value=vehicleSelect.value};
+const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden')};
+document.querySelector('#cancelEdit').onclick=clearEdit;
+async function loadEmployeeData(){
+ const [v,r]=await Promise.all([client.rpc('go_employee_vehicles'),client.rpc('go_employee_my_rentals')]);
+ if(v.error||r.error){say('Account approval or data loading failed: '+(v.error||r.error).message);return}
+ vehicles=v.data||[];myRentals=r.data||[];
+ vehicleSelect.innerHTML='<option value="">Choose a vehicle / Seleccione vehículo</option>'+vehicles.map(x=>'<option value="'+escapeHTML(x.plate)+'">'+escapeHTML(x.name)+' — '+escapeHTML(x.plate)+'</option>').join('');
+ const list=document.querySelector('#myrentals');list.replaceChildren();
+ if(!myRentals.length){list.textContent='No rentals submitted yet.';return}
+ myRentals.forEach(item=>{
+  const div=document.createElement('div');div.style.cssText='border:1px solid #dfe7df;padding:12px;border-radius:9px;margin:9px 0';
+  const title=document.createElement('div');title.textContent=item.customer_name+' · '+item.vehicle_plate+' · '+item.pickup+' → '+item.dropoff;
+  const btn=document.createElement('button');btn.type='button';btn.className='alt';btn.textContent='Edit rental';
+  btn.onclick=()=>{
+   editing=item.id;
+   const set=(name,value)=>{rentalForm.elements.namedItem(name).value=value??''};
+   set('vehicle_plate',item.vehicle_plate);plate.value=item.vehicle_plate;set('customer_name',item.customer_name);
+   const ph=String(item.customer_phone||'');document.querySelector('#code').value=ph.startsWith('+1 ')?'+1':'+505';
+   set('phone_local',ph.replace(/^\+(?:505|1)\s*/,''));set('customer_email',item.customer_email);
+   set('pickup',item.pickup);set('dropoff',item.dropoff);set('rate',item.rate);set('paid',item.paid);set('notes',item.notes);
+   document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');
+   window.scrollTo({top:document.querySelector('#report').offsetTop,behavior:'smooth'});
+  };
+  div.append(title,btn);list.append(div);
+ });
+}
 if(!window.supabase?.createClient){say('Connection library failed to load. Refresh the page.');return}
 const client=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW');
-const show=user=>{auth.classList.toggle('hidden',!!user);report.classList.toggle('hidden',!user);say(user?'Signed in. Your rental reports require owner approval.':'Sign in to submit a rental report.')};
+const show=user=>{auth.classList.toggle('hidden',!!user);report.classList.toggle('hidden',!user);say(user?'Signed in. Loading your available vehicles and rentals…':'Sign in to create a rental.');if(user)loadEmployeeData();else {clearEdit();document.querySelector('#myrentals').textContent='Sign in to see your rentals.'}};
 client.auth.getUser().then(({data,error})=>{if(error)say(error.message);else show(data.user)}).catch(e=>say(e.message));
 document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Signing in…');const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)say(error.message);else{const {data}=await client.auth.getUser();show(data.user)}};
 document.querySelector('#signup').onclick=async()=>{say('Creating account…');const {error}=await client.auth.signUp({email:email.value.trim(),password:password.value});say(error?error.message:'Registration sent. Verify your email, then ask the owner to authorize your account.')};
@@ -37,12 +67,15 @@ if(dropoff<=pickup){say('Return must be after pickup.');return}
 const phone=String(fd.get('phone_local')||'').trim();const rate=fd.get('rate'),paid=fd.get('paid');
 const {data:{user},error:userError}=await client.auth.getUser();
 if(userError||!user){say('Please sign in again.');return}
-const payload={owner_id:OWNER,employee_id:user.id,vehicle_plate:String(fd.get('vehicle_plate')).trim(),customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,rate:rate===''?null:Number(rate),paid:paid===''?null:Number(paid),notes:String(fd.get('notes')||'').trim()};
-button.disabled=true;say('Sending report securely…');
-try{const {error}=await client.from('go_rental_reports').insert(payload);
+const selectedPlate=String(fd.get('vehicle_plate')||'').trim();
+if(!vehicles.some(v=>v.plate===selectedPlate)){say('Choose a valid vehicle from the list.');return}
+if(rate===''){say('Enter the daily rate to save the rental.');return}
+const payload={vehicle_plate:selectedPlate,customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,rate:Number(rate),paid:paid===''?0:Number(paid),notes:String(fd.get('notes')||'').trim()};
+button.disabled=true;say(editing?'Saving changes securely…':'Saving new rental securely…');
+try{const {error}=await client.rpc('go_employee_save_rental',{p_payload:payload,p_report_id:editing});
 if(error)throw error;
-e.currentTarget.reset();say('Rental report submitted successfully. The owner will review it. This is NOT a confirmed booking.');
-}catch(err){say('Report not submitted. '+(err.code==='42501'?'Your employee account may not be authorized yet. Ask the owner to approve your email.':err.message))}finally{button.disabled=false}
+clearEdit();await loadEmployeeData();say('Rental saved to the owner Rentals tab successfully.');
+}catch(err){say('Rental not saved: '+err.message)}finally{button.disabled=false}
 };
 })();
 </script></body></html>

@@ -31,8 +31,15 @@ const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.que
 document.querySelector('#cancelEdit').onclick=clearEdit;
 async function loadEmployeeData(){
  const [v,r]=await Promise.all([client.rpc('go_employee_vehicles'),client.rpc('go_employee_my_rentals')]);
- if(v.error||r.error){say('Account approval or data loading failed: '+(v.error||r.error).message);return}
- vehicles=v.data||[];myRentals=r.data||[];
+ if(v.error||r.error){
+  const error=v.error||r.error;
+  vehicleSelect.innerHTML='<option value="">Unavailable — employee approval needed</option>';
+  document.querySelector('#send').disabled=true;
+  document.querySelector('#myrentals').textContent='Vehicle list unavailable.';
+  say(/approval|authorized|permission|denied/i.test(error.message)?'Your account needs one-time owner approval. Ask the owner to approve your registered email under Employee access, then sign out and back in.':'Unable to load vehicle list: '+error.message);
+  return;
+ }
+ vehicles=v.data||[];myRentals=r.data||[];document.querySelector('#send').disabled=vehicles.length===0;if(!vehicles.length)say('No vehicles available. Ask the owner to check their fleet records.');
  vehicleSelect.innerHTML='<option value="">Choose a vehicle / Seleccione vehículo</option>'+vehicles.map(x=>'<option value="'+escapeHTML(x.plate)+'">'+escapeHTML(x.name)+' — '+escapeHTML(x.plate)+'</option>').join('');
  const list=document.querySelector('#myrentals');list.replaceChildren();
  if(!myRentals.length){list.textContent='No rentals submitted yet.';return}

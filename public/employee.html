@@ -14,6 +14,7 @@
 <label>Customer email / Correo<input name="customer_email" type="email" maxlength="254"></label>
 <div class="grid"><div><label>Pickup / Entrega<input name="pickup" type="date" required></div><div><label>Return / Devolución<input name="dropoff" type="date" required></div></div>
 <div class="grid"><div><label>Daily rate (USD) — fills automatically, editable<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Gas level / Nivel de combustible<select name="gas_level" required><option value="">Select gas level / Seleccionar nivel</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="3/4">3/4</option><option value="FULL">FULL / Lleno</option></select></label></div></div>
+<label>Add Pictures / Agregar fotos (optional)<input id="rentalPhotos" type="file" accept="image/*,.heic,.heif" multiple><span class="muted">Up to 6 photos, 10 MB each. Take pictures before handing over the vehicle.</span></label><div id="photoSelection" class="muted"></div>
 <label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
 <button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button></form><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
@@ -32,7 +33,27 @@ vehicleSelect.onchange=()=>{
  const rateField=rentalForm.elements.namedItem('rate');
  if(!editing){rateField.value=selected?.daily_rate??''}
 };
-const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden')};
+const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#photoSelection').textContent=''};
+const photoInput=document.querySelector('#rentalPhotos');
+photoInput.onchange=()=>{const files=[...photoInput.files];document.querySelector('#photoSelection').textContent=files.length?files.length+' picture(s) selected: '+files.map(f=>f.name).join(', '):''};
+const photoExtensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','image/heif':'heif'};
+async function uploadRentalPhotos(rentalId,files){
+ if(!files.length)return 0;
+ const {data:folder,error:folderError}=await client.rpc('go_employee_photo_prefix',{p_report_id:rentalId});
+ if(folderError)throw folderError;
+ let count=0;
+ for(const file of files){
+  const ext=photoExtensions[file.type]||(/\.(heic|heif|jpe?g|png|webp)$/i.exec(file.name)?.[1]||'').toLowerCase().replace('jpeg','jpg');
+  if(!['jpg','png','webp','heic','heif'].includes(ext))throw Error('Only image photos are allowed.');
+  const contentType=photoExtensions[file.type]?file.type:({'jpg':'image/jpeg','png':'image/png','webp':'image/webp','heic':'image/heic','heif':'image/heif'})[ext];
+  const path=folder+'/'+crypto.randomUUID()+'.'+ext;
+  const {error}=await client.storage.from('go-rental-photos').upload(path,file,{contentType,upsert:false});
+  if(error)throw Error('Photo '+(count+1)+': '+error.message);
+  count++;
+ }
+ return count;
+}
+
 document.querySelector('#cancelEdit').onclick=clearEdit;
 async function loadEmployeeData(){
  const [v,r]=await Promise.all([client.rpc('go_employee_vehicles'),client.rpc('go_employee_my_rentals')]);
@@ -91,10 +112,20 @@ if(rate===''){say('Enter the daily rate to save the rental.');return}
 if(!['1/4','1/2','3/4','FULL'].includes(gasLevel)){say('Choose the gas level.');return}
 const payload={vehicle_plate:selectedPlate,customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,rate:Number(rate),gas_level:gasLevel,notes:String(fd.get('notes')||'').trim()};
 button.disabled=true;say(editing?'Saving changes securely…':'Saving new rental securely…');
-try{const {error}=await client.rpc('go_employee_save_rental',{p_payload:payload,p_report_id:editing});
-if(error)throw error;
-clearEdit();await loadEmployeeData();say('Rental saved to the owner Rentals tab successfully.');
-}catch(err){say('Rental not saved: '+err.message)}finally{button.disabled=false}
+const pictures=[...photoInput.files];
+if(pictures.length>6){say('Choose up to 6 pictures.');button.disabled=false;return}
+if(pictures.some(f=>f.size>10*1024*1024)){say('Each picture must be smaller than 10 MB.');button.disabled=false;return}
+let rentalSaved=false;
+try{
+ const {data:rentalId,error}=await client.rpc('go_employee_save_rental',{p_payload:payload,p_report_id:editing});
+ if(error)throw error;
+ rentalSaved=true;editing=rentalId;
+ const count=await uploadRentalPhotos(rentalId,pictures);
+ clearEdit();await loadEmployeeData();
+ say('Rental saved to owner Rentals tab'+(count?' with '+count+' picture(s)':'')+' successfully.');
+}catch(err){say(rentalSaved?'Rental was saved, but pictures could not be fully uploaded: '+err.message+'. Keep this form open and retry using Save changes (do not create a new rental).':'Rental not saved: '+err.message);
+ if(rentalSaved){document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden')}
+}finally{button.disabled=false}
 };
 })();
 </script></body></html>

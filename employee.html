@@ -4,9 +4,9 @@
 <style>
 :root{font-family:Inter,system-ui,sans-serif;color:#233629;background:#f7f9f6}*{box-sizing:border-box}body{margin:0}main{max-width:650px;margin:4vh auto;padding:18px}h1{margin:0 0 5px;font-size:27px}h2{font-size:19px}p{line-height:1.5;color:#647567}section{background:#fff;padding:26px;border:1px solid #dfe7df;border-radius:15px;margin-top:16px}label{display:block;font-weight:650;font-size:13px;margin:13px 0 5px}input,textarea,select{display:block;width:100%;padding:12px;border:1px solid #cbd7cb;border-radius:8px;font:inherit}textarea{min-height:85px}button{padding:12px 17px;border:0;background:#2e6649;color:white;border-radius:8px;font-weight:700;cursor:pointer;margin-top:16px}button:disabled{opacity:.5}button.alt{background:#eef4ee;color:#365943;margin-left:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.hidden{display:none!important}.status{padding:11px;background:#eef5ee;border-radius:8px;font-size:13px;white-space:pre-wrap}.muted{font-size:12px}@media(max-width:520px){.grid{grid-template-columns:1fr}section{padding:18px}}
 @media(max-width:640px){html,body{overflow-x:hidden}main{margin:0 auto;padding:12px 12px calc(25px + env(safe-area-inset-bottom))}h1{font-size:23px}section{margin-top:12px;padding:17px 14px;border-radius:12px}h2{font-size:18px}.grid{grid-template-columns:1fr}input,textarea,select{font-size:16px;min-height:46px}#login button,#rental button{width:100%;margin:10px 0 0}#signout{width:auto!important}#status{position:relative;line-height:1.5}}</style></head>
-<body><main><h1>GO Rentals</h1><p>Employee portal · Report a new rental / Reportar un alquiler</p>
+<body><main><h1>GO Rentals</h1><p>Employee rental entry / Registro de alquiler</p>
 <section id="auth"><h2>Employee sign in</h2><form id="login"><label>Email<input id="email" type="email" required autocomplete="email"></label><label>Password<input id="password" type="password" required minlength="8" autocomplete="current-password"></label><button type="submit">Sign in</button><button class="alt" type="button" id="signup">Create employee account</button></form><p class="muted">After registering, verify your email. The owner must approve your account before you can send reports.</p></section>
-<section id="report" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>New rental report</h2><button class="alt" id="signout" type="button">Sign out</button></div><p>Create a rental directly in GO Rentals. You can edit rentals you submitted below.</p>
+<section id="report" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>New rental</h2><button class="alt" id="signout" type="button">Sign out</button></div><p>Create a rental directly in GO Rentals. You can edit rentals you submitted below.</p>
 <form id="rental">
 <label>Vehicle / Vehículo<select id="vehicle" name="vehicle_plate" required><option value="">Loading vehicles…</option></select></label><label>License plate / Placa<input id="plate" readonly placeholder="Selected automatically"></label>
 <label>Customer name / Nombre<input name="customer_name" required minlength="2" maxlength="140"></label>
@@ -55,11 +55,17 @@ async function loadEmployeeData(){
 }
 if(!window.supabase?.createClient){say('Connection library failed to load. Refresh the page.');return}
 const client=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW');
-const show=user=>{auth.classList.toggle('hidden',!!user);report.classList.toggle('hidden',!user);say(user?'Signed in. Loading your available vehicles and rentals…':'Sign in to create a rental.');if(user)loadEmployeeData();else {clearEdit();document.querySelector('#myrentals').textContent='Sign in to see your rentals.'}};
+const show=user=>{
+ if(!user){window.location.replace('/');return}
+ if(user.id===OWNER){window.location.replace('/');return}
+ auth.classList.add('hidden');report.classList.remove('hidden');
+ say('Signed in. Loading your available vehicles and rentals…');
+ loadEmployeeData();
+};
 client.auth.getUser().then(({data,error})=>{if(error)say(error.message);else show(data.user)}).catch(e=>say(e.message));
 document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Signing in…');const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)say(error.message);else{const {data}=await client.auth.getUser();show(data.user)}};
 document.querySelector('#signup').onclick=async()=>{say('Creating account…');const {error}=await client.auth.signUp({email:email.value.trim(),password:password.value});say(error?error.message:'Registration sent. Verify your email, then ask the owner to authorize your account.')};
-document.querySelector('#signout').onclick=async()=>{await client.auth.signOut();show(null)};
+document.querySelector('#signout').onclick=async()=>{await client.auth.signOut();window.location.replace('/')};
 document.querySelector('#rental').onsubmit=async e=>{
 e.preventDefault();const button=document.querySelector('#send'),fd=new FormData(e.currentTarget);
 const pickup=String(fd.get('pickup')),dropoff=String(fd.get('dropoff'));

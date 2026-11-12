@@ -189,18 +189,18 @@ const bar=document.querySelector('.actions');if(bar){const history=document.crea
 async function ownerEmployeeTools(){
  if(!goReady||!goUser)return;
  const actions=document.querySelector('.actions');if(!actions||document.querySelector('#go-employee-tools'))return;
- const trigger=document.createElement('button');trigger.id='go-employee-tools';trigger.className='btn';trigger.textContent='Employee reports';actions.appendChild(trigger);
+ const trigger=document.createElement('button');trigger.id='go-employee-tools';trigger.className='btn';trigger.textContent='Employee access';actions.appendChild(trigger);
  const modalOpen=(heading)=>{const overlay=document.createElement('div');overlay.className='overlay';const panel=document.createElement('div');panel.className='modal';overlay.appendChild(panel);const title=document.createElement('h3');title.textContent=heading;panel.appendChild(title);const close=document.createElement('button');close.className='btn';close.textContent='Close';close.onclick=()=>overlay.remove();panel.appendChild(close);document.body.appendChild(overlay);overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};return {overlay,panel,close}};
  trigger.onclick=async()=>{
   const {overlay,panel,close}=modalOpen('Employee access & rental reports');
-  const info=document.createElement('p');info.className='help';info.textContent='Employees register at /employee.html, verify their email, and must be approved here. Reports are not bookings until you accept them.';panel.insertBefore(info,close);
+  const info=document.createElement('p');info.className='help';info.textContent='Employees register at /employee.html, verify their email, and must be approved here. Approved employees now save rentals directly to your Rentals tab. Older pending reports can still be reviewed here.';panel.insertBefore(info,close);
   const employeeLink=document.createElement('a');employeeLink.href='/employee.html';employeeLink.target='_blank';employeeLink.rel='noopener';employeeLink.textContent='Open employee portal';panel.insertBefore(employeeLink,close);
   const row=document.createElement('div');row.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin:14px 0';
   const emailInput=document.createElement('input');emailInput.type='email';emailInput.placeholder='Employee email address';emailInput.style.flex='1 1 200px';
   const approve=document.createElement('button');approve.className='btn primary';approve.textContent='Approve employee';
   row.append(emailInput,approve);panel.insertBefore(row,close);
   const notice=document.createElement('p');notice.className='help';panel.insertBefore(notice,close);
-  approve.onclick=async()=>{const mail=emailInput.value.trim();if(!mail){notice.textContent='Enter employee email.';return}approve.disabled=true;const {error}=await goClient.rpc('go_approve_employee',{p_email:mail});notice.textContent=error?'Approval failed: '+error.message:'Employee approved. They can now submit rental reports.';approve.disabled=false};
+  approve.onclick=async()=>{const mail=emailInput.value.trim();if(!mail){notice.textContent='Enter employee email.';return}approve.disabled=true;const {error}=await goClient.rpc('go_approve_employee',{p_email:mail});notice.textContent=error?'Approval failed: '+error.message:'Employee approved. They can now create and edit their own rentals.';approve.disabled=false};
   const heading=document.createElement('h3');heading.textContent='Reports awaiting review';heading.style.marginTop='22px';panel.insertBefore(heading,close);
   const container=document.createElement('div');panel.insertBefore(container,close);
   const refresh=async()=>{

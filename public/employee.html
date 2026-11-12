@@ -43,6 +43,7 @@ function localize(){
  const save=document.querySelector('#send');save.textContent=language==='es'?(save.textContent==='Save changes'||save.textContent==='Guardar cambios'?'Guardar cambios':'Guardar alquiler'):(save.textContent==='Save changes'||save.textContent==='Guardar cambios'?'Save changes':'Save rental');
  for(const el of root.querySelectorAll('[data-edit-rental]'))el.textContent=language==='es'?'Editar alquiler':'Edit rental';
  const deleteButton=document.querySelector('#deleteRental');deleteButton.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
+ for(const item of root.querySelectorAll('[data-delete-entry]'))item.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
 }
 document.querySelector('#portalLang').onchange=e=>{language=e.target.value;localStorage.setItem('go_employee_language',language);localize()};
 const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=message};
@@ -78,22 +79,28 @@ async function uploadRentalPhotos(rentalId,files){
 }
 
 document.querySelector('#cancelEdit').onclick=clearEdit;
-document.querySelector('#deleteRental').onclick=async()=>{
- if(!editing)return;
- const id=editing;
- if(!confirm(language==='es'?'¿Eliminar este alquiler? También desaparecerá de la pestaña Alquileres del propietario.':'Delete this rental? It will also disappear from the owner Rentals tab.'))return;
- const button=document.querySelector('#deleteRental');
+async function deleteEmployeeRental(id,clickedButton){
+ if(!id)return;
+ const entry=myRentals.find(r=>r.id===id);
+ const label=entry?entry.customer_name+' — '+entry.vehicle_plate+' ('+entry.pickup+')':'this rental';
+ const confirmText=language==='es'
+  ?'¿Eliminar el alquiler de '+label+'? También se quitará de la pestaña Alquileres del propietario si todavía aparece ahí.'
+  :'Delete the rental for '+label+'? It will also be removed from the owner Rentals tab if it is still there.';
+ if(!confirm(confirmText))return;
+ const button=clickedButton||document.querySelector('#deleteRental');
  const saveButton=document.querySelector('#send');
  button.disabled=true;saveButton.disabled=true;say('Deleting rental…');
  try{
-   const {error}=await client.rpc('go_employee_delete_rental',{p_report_id:id});
-   if(error)throw error;
-   clearEdit();
-   await loadEmployeeData();
-   say('Rental deleted successfully from both employee and owner records.');
+  const {data,error}=await client.rpc('go_employee_delete_rental',{p_report_id:id});
+  if(error)throw error;
+  if(data!==true)throw Error('Delete was not confirmed by server.');
+  if(editing===id)clearEdit();
+  await loadEmployeeData();
+  say('Rental deleted successfully from both employee and owner records.');
  }catch(err){say('Could not delete rental: '+err.message)}
  finally{button.disabled=false;saveButton.disabled=false}
-};
+}
+document.querySelector('#deleteRental').onclick=()=>{void deleteEmployeeRental(editing,document.querySelector('#deleteRental'))};
 async function loadEmployeeData(){
  const [v,r]=await Promise.all([client.rpc('go_employee_vehicles'),client.rpc('go_employee_my_rentals')]);
  if(v.error||r.error){
@@ -123,7 +130,11 @@ async function loadEmployeeData(){
    localize();
    window.scrollTo({top:document.querySelector('#report').offsetTop,behavior:'smooth'});
   };
-  div.append(title,btn);list.append(div);
+  const del=document.createElement('button');del.type='button';del.className='danger';del.dataset.deleteEntry='true';
+  del.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
+  del.style.marginLeft='8px';
+  del.onclick=()=>{void deleteEmployeeRental(item.id,del)};
+  div.append(title,btn,del);list.append(div);
  });
  localize();
 }

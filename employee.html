@@ -13,7 +13,7 @@
 <div class="grid"><div><label>Country code</label><select id="code"><option value="+505">🇳🇮 Nicaragua +505</option><option value="+1">🇺🇸 USA +1</option></select></div><div><label>Customer phone / Teléfono</label><input name="phone_local" type="tel" maxlength="30" placeholder="8888 8888"></div></div>
 <label>Customer email / Correo<input name="customer_email" type="email" maxlength="254"></label>
 <div class="grid"><div><label>Pickup / Entrega<input name="pickup" type="date" required></div><div><label>Return / Devolución<input name="dropoff" type="date" required></div></div>
-<div class="grid"><div><label>Daily rate (USD)<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Payment collected (USD)<input name="paid" type="number" min="0" max="1000000" step="0.01"></div></div>
+<div class="grid"><div><label>Daily rate (USD) — fills automatically, editable<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Payment collected (USD)<input name="paid" type="number" min="0" max="1000000" step="0.01"></div></div>
 <label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
 <button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button></form><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
@@ -26,7 +26,12 @@ const say=s=>status.textContent=s;
 let editing=null,vehicles=[],myRentals=[];
 const vehicleSelect=document.querySelector('#vehicle'),plate=document.querySelector('#plate'),rentalForm=document.querySelector('#rental');
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-vehicleSelect.onchange=()=>{plate.value=vehicleSelect.value};
+vehicleSelect.onchange=()=>{
+ plate.value=vehicleSelect.value;
+ const selected=vehicles.find(v=>v.plate===vehicleSelect.value);
+ const rateField=rentalForm.elements.namedItem('rate');
+ if(!editing){rateField.value=selected?.daily_rate??''}
+};
 const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden')};
 document.querySelector('#cancelEdit').onclick=clearEdit;
 async function loadEmployeeData(){

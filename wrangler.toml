@@ -1,0 +1,6 @@
+name = "gorentals"
+compatibility_date = "2026-11-12"
+
+[assets]
+directory = "./public"
+not_found_handling = "single-page-application"

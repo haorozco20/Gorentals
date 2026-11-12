@@ -117,7 +117,7 @@ async function refreshOwnerFromCloud(){
    try{localStorage.setItem(KEY,JSON.stringify(db))}catch{}
    render();cloudStatus('Synced • Latest employee rentals loaded ✓');
   }
- }catch(err){cloudStatus('Sync check failed: '+err.message,true)}
+ }catch(err){cloudStatus('Sync check failed: '+err.message)}
  finally{goCheckingForUpdates=false}
 }
 window.addEventListener('focus',()=>{void refreshOwnerFromCloud()});

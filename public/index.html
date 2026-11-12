@@ -67,7 +67,41 @@ body.go-unlocked #go-auth{display:none!important}
 #go-cloud-status{position:fixed;bottom:16px;right:16px;z-index:90;background:#fff;border:1px solid #d8e1d8;padding:10px 13px;border-radius:9px;box-shadow:0 4px 22px #142b181c;color:#345842;font-size:12px;display:none;max-width:320px}
 body.go-unlocked #go-cloud-status{display:block}
 #go-cloud-status.go-failure{border-color:#c76c6c;color:#a23030;background:#fff9f9}
-</style></head><body><div id="go-auth"><section class="go-login-card"><h1>GO Rentals</h1><p>Private fleet management / Administración privada</p><form id="go-login-form"><label>Email<input id="go-email" type="email" autocomplete="email" required value="haorozco20@gmail.com"></label><label>Password / Contraseña<input id="go-password" type="password" autocomplete="current-password" minlength="8" required></label><button id="go-login-btn" type="submit">Sign in / Iniciar sesión</button></form><p id="go-auth-status">Checking secure connection…</p><p>New employee? <a href="/employee.html" style="color:#2d5d45;font-weight:700;text-decoration:underline">Create account</a></p><p>Setting up the owner account? <button id="go-signup" type="button">Create owner account</button></p><p style="font-size:11px">Use your own password, and confirm your email if requested. Do not share your credentials.</p></section></div><div id="go-cloud-status" role="status" aria-live="polite">Connecting…</div><div class="layout"><aside class="side"><div><div class="logo">GO <em>Rentals</em></div><div class="sub" data-t="subtitle">Fleet Management</div></div><nav class="nav" id="nav"></nav><div class="bottom">GO Rentals • Independent trial<br><span data-t="offline">Saved on this device</span></div></aside><main class="main"><div class="top"><div><div class="eyebrow">GO Rentals / <span id="crumb"></span></div><h1 class="heading" id="heading"></h1></div><div class="actions"><select class="lang" id="lang"><option value="en">English</option><option value="es">Español</option></select><button class="btn" id="backup" data-t="export">Export backup</button><button class="btn" id="restore" data-t="import">Import backup</button><input type="file" accept=".json,application/json" id="file" hidden></div></div><div id="content"></div></main></div><div id="modalRoot"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>
+
+/* Phone-first owner experience */
+@media(max-width:720px){
+ html,body{width:100%;overflow-x:hidden}
+ .layout{display:block!important;min-width:0!important}
+ .side{position:sticky;top:0;z-index:6;background:#fff!important;padding:11px 12px!important}
+ .logo{font-size:20px!important}
+ .nav{display:flex!important;gap:5px!important;overflow-x:auto!important;scrollbar-width:none;padding:2px 0!important}
+ .nav::-webkit-scrollbar{display:none}
+ .nav button{flex:0 0 auto;min-height:42px;font-size:12px!important}
+ .main{min-width:0;padding:16px 12px 85px!important}
+ .top{display:block!important}
+ .heading{font-size:23px!important;margin:5px 0 14px!important}
+ .actions{display:flex;overflow-x:auto;flex-wrap:nowrap!important;padding-bottom:9px}
+ .actions>*{flex-shrink:0;width:auto!important;min-height:42px}
+ .cards{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ .card,.panel{padding:13px!important;min-width:0}
+ .card strong{font-size:21px!important}
+ .grid2{grid-template-columns:1fr!important}
+ .table-wrap{width:100%;max-width:calc(100vw - 54px);overflow-x:auto;-webkit-overflow-scrolling:touch}
+ table{min-width:570px}
+ td,th{padding:11px 10px!important}
+ .overlay{align-items:flex-end!important;padding:0!important}
+ .modal{width:100%!important;max-height:94dvh!important;border-radius:16px 16px 0 0!important;padding:17px 14px calc(14px + env(safe-area-inset-bottom))!important}
+ .fields{grid-template-columns:1fr!important}
+ .field.full{grid-column:auto!important}
+ input,select,textarea{min-height:44px;font-size:16px!important}
+ button{touch-action:manipulation}
+ .foot{position:sticky;bottom:0;background:#fff;padding:11px 0 0!important}
+ .foot button{min-height:45px}
+ #go-auth{padding:14px!important;min-height:100dvh}
+ #go-auth .go-login-card{padding:21px!important}
+ #go-cloud-status{bottom:8px;right:8px;left:8px;max-width:none!important}
+}
+</style></head><body><div id="go-auth"><section class="go-login-card"><h1>GO Rentals</h1><p>Private fleet management / Administración privada</p><form id="go-login-form"><label>Email<input id="go-email" type="email" autocomplete="email" required value="haorozco20@gmail.com"></label><label>Password / Contraseña<input id="go-password" type="password" autocomplete="current-password" minlength="8" required></label><button id="go-login-btn" type="submit">Sign in / Iniciar sesión</button></form><p id="go-auth-status">Checking secure connection…</p><p>First time? <button id="go-signup" type="button">Create owner account</button></p><p style="font-size:11px">Use your own password, and confirm your email if requested. Do not share your credentials.</p></section></div><div id="go-cloud-status" role="status" aria-live="polite">Connecting…</div><div class="layout"><aside class="side"><div><div class="logo">GO <em>Rentals</em></div><div class="sub" data-t="subtitle">Fleet Management</div></div><nav class="nav" id="nav"></nav><div class="bottom">GO Rentals • Independent trial<br><span data-t="offline">Saved on this device</span></div></aside><main class="main"><div class="top"><div><div class="eyebrow">GO Rentals / <span id="crumb"></span></div><h1 class="heading" id="heading"></h1></div><div class="actions"><select class="lang" id="lang"><option value="en">English</option><option value="es">Español</option></select><button class="btn" id="backup" data-t="export">Export backup</button><button class="btn" id="restore" data-t="import">Import backup</button><input type="file" accept=".json,application/json" id="file" hidden></div></div><div id="content"></div></main></div><div id="modalRoot"></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>
 (()=>{'use strict';const KEY='go_rentals_independent_v1';const initialVehicles=[['Mitsubishi','Sportero',2017,'','M280357','pickup',85.32],['Toyota','Corolla',2019,'Chocolate','M411649','sedan',55.68],['Hyundai','Tucson',2021,'Gray','M386243','suv',58.78],['Hyundai','Tucson',2022,'White','M351430','suv',58.14],['Hyundai','Tucson',2023,'White','M372389','suv',53.56],['Toyota','Corolla',2019,'Blue','M416117','sedan',60.08],['Mitsubishi','L200',2024,'','M457950','pickup',61.62],['Toyota','Raize',2026,'','M471235','mini',39.39]];const rates={sedan:40,mini:45,suv:60,pickup:75,luxury:80};const categoryLabels={sedan:'Sedan',mini:'Mini SUV',suv:'SUV',pickup:'Pickup',luxury:'Luxury'};const categoryName=value=>categoryLabels[value]||value||'';const uid=()=>crypto.randomUUID?crypto.randomUUID():'id'+Date.now()+Math.random().toString(36).slice(2);const seed=()=>({vehicles:initialVehicles.map(v=>({id:uid(),make:v[0],model:v[1],year:v[2],color:v[3],plate:v[4],category:v[5],insurance:v[6],loan:0,loanPayment:0,ownership:'owned'})),customers:[],rentals:[],expenses:[],language:'en'});let localBackup=null;try{localBackup=JSON.parse(localStorage.getItem(KEY))}catch{}let db=seed();for(const k of ['vehicles','customers','rentals','expenses'])if(!Array.isArray(db[k]))db[k]=[];let page='dashboard';
 let goClient=null,goUser=null,goRevision=0,goQueue=Promise.resolve(),goReady=false,goFailed=false;
 const cloudStatus=(message,failed=false)=>{const el=document.querySelector('#go-cloud-status');if(el){el.textContent=message;el.classList.toggle('go-failure',failed)}goFailed=failed};
@@ -108,6 +142,10 @@ const btn=document.querySelector('#go-login-btn');
 if(!window.supabase?.createClient){msg('Secure login library could not load. Check your internet connection and refresh.');return}
 goClient=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW',{auth:{persistSession:true,autoRefreshToken:true}});
 async function loadForUser(user){
+if(user.id!=='98eed9ac-b4c6-4c66-8298-923c85d49b94'){
+msg('Employee account detected. Opening employee rental portal…');
+window.location.replace('/employee.html');return;
+}
 goUser=user;msg('Loading your private records…');
 const {data,error}=await goClient.from('go_app_state').select('state,revision').eq('owner_id',user.id).maybeSingle();
 if(error){msg('Database access denied: '+error.message+'. Confirm your email and account authorization.');return}
@@ -118,7 +156,7 @@ const inserted=await goClient.from('go_app_state').insert({owner_id:user.id,stat
 if(inserted.error){msg('Could not initialize private data: '+inserted.error.message);return}
 goRevision=inserted.data.revision;
 }
-goReady=true;document.body.classList.add('go-unlocked');cloudStatus('Connected • Saved online');render();
+goReady=true;document.body.classList.add('go-unlocked');cloudStatus('Connected • Saved online');render();ownerEmployeeTools();
 }
 document.querySelector('#go-login-form').onsubmit=async e=>{e.preventDefault();btn.disabled=true;msg('Signing in…');
 try{const email=document.querySelector('#go-email').value.trim().toLowerCase(),password=document.querySelector('#go-password').value;
@@ -146,5 +184,60 @@ const backupHistory=async()=>{
 };
 const bar=document.querySelector('.actions');if(bar){const history=document.createElement('button');history.className='btn';history.textContent='Cloud backups';history.onclick=backupHistory;bar.appendChild(history);const logout=document.createElement('button');logout.className='btn';logout.textContent='Sign out';logout.onclick=async()=>{goReady=false;goUser=null;await goClient.auth.signOut();document.body.classList.remove('go-unlocked');msg('Signed out');};bar.appendChild(logout)}
 }
+
+/* Owner-only employee management and incoming rental reports */
+async function ownerEmployeeTools(){
+ if(!goReady||!goUser)return;
+ const actions=document.querySelector('.actions');if(!actions||document.querySelector('#go-employee-tools'))return;
+ const trigger=document.createElement('button');trigger.id='go-employee-tools';trigger.className='btn';trigger.textContent='Employee reports';actions.appendChild(trigger);
+ const modalOpen=(heading)=>{const overlay=document.createElement('div');overlay.className='overlay';const panel=document.createElement('div');panel.className='modal';overlay.appendChild(panel);const title=document.createElement('h3');title.textContent=heading;panel.appendChild(title);const close=document.createElement('button');close.className='btn';close.textContent='Close';close.onclick=()=>overlay.remove();panel.appendChild(close);document.body.appendChild(overlay);overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};return {overlay,panel,close}};
+ trigger.onclick=async()=>{
+  const {overlay,panel,close}=modalOpen('Employee access & rental reports');
+  const info=document.createElement('p');info.className='help';info.textContent='Employees register at /employee.html, verify their email, and must be approved here. Reports are not bookings until you accept them.';panel.insertBefore(info,close);
+  const employeeLink=document.createElement('a');employeeLink.href='/employee.html';employeeLink.target='_blank';employeeLink.rel='noopener';employeeLink.textContent='Open employee portal';panel.insertBefore(employeeLink,close);
+  const row=document.createElement('div');row.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin:14px 0';
+  const emailInput=document.createElement('input');emailInput.type='email';emailInput.placeholder='Employee email address';emailInput.style.flex='1 1 200px';
+  const approve=document.createElement('button');approve.className='btn primary';approve.textContent='Approve employee';
+  row.append(emailInput,approve);panel.insertBefore(row,close);
+  const notice=document.createElement('p');notice.className='help';panel.insertBefore(notice,close);
+  approve.onclick=async()=>{const mail=emailInput.value.trim();if(!mail){notice.textContent='Enter employee email.';return}approve.disabled=true;const {error}=await goClient.rpc('go_approve_employee',{p_email:mail});notice.textContent=error?'Approval failed: '+error.message:'Employee approved. They can now submit rental reports.';approve.disabled=false};
+  const heading=document.createElement('h3');heading.textContent='Reports awaiting review';heading.style.marginTop='22px';panel.insertBefore(heading,close);
+  const container=document.createElement('div');panel.insertBefore(container,close);
+  const refresh=async()=>{
+   container.textContent='Loading reports…';
+   const {data,error}=await goClient.from('go_rental_reports').select('id,vehicle_plate,customer_name,customer_phone,customer_email,pickup,dropoff,rate,paid,notes,created_at,status').eq('owner_id',goUser.id).eq('status','pending').order('created_at',{ascending:false}).limit(100);
+   container.textContent='';if(error){container.textContent=error.message;return}
+   if(!data.length){container.textContent='No pending reports.';return}
+   for(const item of data){
+    const entry=document.createElement('div');entry.style.cssText='border:1px solid #dfe7df;border-radius:10px;padding:12px;margin:10px 0';
+    const label=document.createElement('p');label.style.whiteSpace='pre-wrap';label.textContent=[item.vehicle_plate+' • '+item.customer_name,item.pickup+' → '+item.dropoff,(item.customer_phone||'')+' • '+(item.customer_email||''),'Daily rate: $'+(item.rate??'not supplied')+' • Paid: $'+(item.paid??'not supplied'),item.notes||''].join('\n');entry.appendChild(label);
+    const accept=document.createElement('button');accept.className='btn primary';accept.textContent='Accept rental';
+    const reject=document.createElement('button');reject.className='btn';reject.textContent='Reject';reject.style.marginLeft='7px';
+    entry.append(accept,reject);container.appendChild(entry);
+    reject.onclick=async()=>{if(!confirm('Reject this report?'))return;reject.disabled=true;const result=await goClient.from('go_rental_reports').update({status:'rejected'}).eq('id',item.id).eq('owner_id',goUser.id);if(result.error){alert(result.error.message);reject.disabled=false}else refresh()};
+    accept.onclick=async()=>{
+      const vehicle=db.vehicles.find(v=>String(v.plate).trim().toUpperCase()===String(item.vehicle_plate).trim().toUpperCase());
+      if(!vehicle){alert('Vehicle not found in your fleet. Check the plate before accepting.');return}
+      if(db.rentals.some(r=>r.vehicleId===vehicle.id&&r.status!=='returned'&&item.pickup<r.dropoff&&item.dropoff>r.pickup)){alert('Vehicle already has a booking overlapping those dates. Resolve before accepting.');return}
+      if(item.rate==null){alert('Ask employee for daily rate before accepting.');return}
+      if(!confirm('Accept this report and add an official rental?'))return;
+      const old=db.customers.find(c=>item.customer_email&&c.email?.toLowerCase()===item.customer_email.toLowerCase())||db.customers.find(c=>item.customer_phone&&c.phone===item.customer_phone);
+      const customer=old||{id:uid(),name:item.customer_name,email:item.customer_email||'',phone:item.customer_phone||''};
+      if(!old)db.customers.push(customer);
+      const total=days(item.pickup,item.dropoff)*Number(item.rate||0);
+      if(Number(item.paid||0)>total){alert('Payment exceeds rental total. Check the report.');if(!old)db.customers=db.customers.filter(c=>c.id!==customer.id);return}
+      db.rentals.push({id:uid(),vehicleId:vehicle.id,customerId:customer.id,phone:item.customer_phone||'',email:item.customer_email||'',pickup:item.pickup,dropoff:item.dropoff,rate:Number(item.rate),discountType:'none',discount:0,extras:0,paid:Number(item.paid||0),total,status:'reserved',notes:item.notes||''});
+      save();render();accept.disabled=true;
+      await goQueue.catch(()=>{});
+      if(goFailed){alert('Cloud save failed. Report remains pending for recovery. Please do not accept it again before reconciling records.');return}
+      const {error}=await goClient.from('go_rental_reports').update({status:'accepted'}).eq('id',item.id).eq('owner_id',goUser.id);
+      if(error){alert('Rental saved, but report status could not be updated: '+error.message);return}
+      refresh();
+    };
+   }
+  };refresh();
+ };
+}
+
 startCloudAuth();})();
 </script></body></html>

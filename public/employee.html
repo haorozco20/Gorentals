@@ -13,7 +13,7 @@
 <div class="grid"><div><label>Country code</label><select id="code"><option value="+505">🇳🇮 Nicaragua +505</option><option value="+1">🇺🇸 USA +1</option></select></div><div><label>Customer phone / Teléfono</label><input name="phone_local" type="tel" maxlength="30" placeholder="8888 8888"></div></div>
 <label>Customer email / Correo<input name="customer_email" type="email" maxlength="254"></label>
 <div class="grid"><div><label>Pickup / Entrega<input name="pickup" type="date" required></div><div><label>Return / Devolución<input name="dropoff" type="date" required></div></div>
-<div class="grid"><div><label>Daily rate (USD) — fills automatically, editable<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Payment collected (USD)<input name="paid" type="number" min="0" max="1000000" step="0.01"></div></div>
+<div class="grid"><div><label>Daily rate (USD) — fills automatically, editable<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Gas level / Nivel de combustible<select name="gas_level" required><option value="">Select gas level / Seleccionar nivel</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="3/4">3/4</option><option value="FULL">FULL / Lleno</option></select></label></div></div>
 <label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
 <button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button></form><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
@@ -50,7 +50,7 @@ async function loadEmployeeData(){
  if(!myRentals.length){list.textContent='No rentals submitted yet.';return}
  myRentals.forEach(item=>{
   const div=document.createElement('div');div.style.cssText='border:1px solid #dfe7df;padding:12px;border-radius:9px;margin:9px 0';
-  const title=document.createElement('div');title.textContent=item.customer_name+' · '+item.vehicle_plate+' · '+item.pickup+' → '+item.dropoff;
+  const title=document.createElement('div');title.textContent=item.customer_name+' · '+item.vehicle_plate+' · '+item.pickup+' → '+item.dropoff+' · Gas: '+(item.gas_level||'Not recorded');
   const btn=document.createElement('button');btn.type='button';btn.className='alt';btn.textContent='Edit rental';
   btn.onclick=()=>{
    editing=item.id;
@@ -58,7 +58,7 @@ async function loadEmployeeData(){
    set('vehicle_plate',item.vehicle_plate);plate.value=item.vehicle_plate;set('customer_name',item.customer_name);
    const ph=String(item.customer_phone||'');document.querySelector('#code').value=ph.startsWith('+1 ')?'+1':'+505';
    set('phone_local',ph.replace(/^\+(?:505|1)\s*/,''));set('customer_email',item.customer_email);
-   set('pickup',item.pickup);set('dropoff',item.dropoff);set('rate',item.rate);set('paid',item.paid);set('notes',item.notes);
+   set('pickup',item.pickup);set('dropoff',item.dropoff);set('rate',item.rate);set('gas_level',item.gas_level||'');set('notes',item.notes);
    document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');
    window.scrollTo({top:document.querySelector('#report').offsetTop,behavior:'smooth'});
   };
@@ -82,13 +82,14 @@ document.querySelector('#rental').onsubmit=async e=>{
 e.preventDefault();const button=document.querySelector('#send'),fd=new FormData(e.currentTarget);
 const pickup=String(fd.get('pickup')),dropoff=String(fd.get('dropoff'));
 if(dropoff<=pickup){say('Return must be after pickup.');return}
-const phone=String(fd.get('phone_local')||'').trim();const rate=fd.get('rate'),paid=fd.get('paid');
+const phone=String(fd.get('phone_local')||'').trim();const rate=fd.get('rate'),gasLevel=String(fd.get('gas_level')||'');
 const {data:{user},error:userError}=await client.auth.getUser();
 if(userError||!user){say('Please sign in again.');return}
 const selectedPlate=String(fd.get('vehicle_plate')||'').trim();
 if(!vehicles.some(v=>v.plate===selectedPlate)){say('Choose a valid vehicle from the list.');return}
 if(rate===''){say('Enter the daily rate to save the rental.');return}
-const payload={vehicle_plate:selectedPlate,customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,rate:Number(rate),paid:paid===''?0:Number(paid),notes:String(fd.get('notes')||'').trim()};
+if(!['1/4','1/2','3/4','FULL'].includes(gasLevel)){say('Choose the gas level.');return}
+const payload={vehicle_plate:selectedPlate,customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,rate:Number(rate),gas_level:gasLevel,notes:String(fd.get('notes')||'').trim()};
 button.disabled=true;say(editing?'Saving changes securely…':'Saving new rental securely…');
 try{const {error}=await client.rpc('go_employee_save_rental',{p_payload:payload,p_report_id:editing});
 if(error)throw error;

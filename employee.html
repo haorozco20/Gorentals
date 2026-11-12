@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GO Rentals — Employee Rental Reports</title>
 <style>
-:root{font-family:Inter,system-ui,sans-serif;color:#233629;background:#f7f9f6}*{box-sizing:border-box}body{margin:0}main{max-width:650px;margin:4vh auto;padding:18px}h1{margin:0 0 5px;font-size:27px}h2{font-size:19px}p{line-height:1.5;color:#647567}section{background:#fff;padding:26px;border:1px solid #dfe7df;border-radius:15px;margin-top:16px}label{display:block;font-weight:650;font-size:13px;margin:13px 0 5px}input,textarea,select{display:block;width:100%;padding:12px;border:1px solid #cbd7cb;border-radius:8px;font:inherit}textarea{min-height:85px}button{padding:12px 17px;border:0;background:#2e6649;color:white;border-radius:8px;font-weight:700;cursor:pointer;margin-top:16px}button:disabled{opacity:.5}button.alt{background:#eef4ee;color:#365943;margin-left:7px}button.danger{background:#b63e3e;color:white}button.danger:hover{background:#983333}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.hidden{display:none!important}.status{padding:11px;background:#eef5ee;border-radius:8px;font-size:13px;white-space:pre-wrap}.muted{font-size:12px}@media(max-width:520px){.grid{grid-template-columns:1fr}section{padding:18px}}
+:root{font-family:Inter,system-ui,sans-serif;color:#233629;background:#f7f9f6}*{box-sizing:border-box}body{margin:0}main{max-width:650px;margin:4vh auto;padding:18px}h1{margin:0 0 5px;font-size:27px}h2{font-size:19px}p{line-height:1.5;color:#647567}section{background:#fff;padding:26px;border:1px solid #dfe7df;border-radius:15px;margin-top:16px}label{display:block;font-weight:650;font-size:13px;margin:13px 0 5px}input,textarea,select{display:block;width:100%;padding:12px;border:1px solid #cbd7cb;border-radius:8px;font:inherit}textarea{min-height:85px}button{padding:12px 17px;border:0;background:#2e6649;color:white;border-radius:8px;font-weight:700;cursor:pointer;margin-top:16px}button:disabled{opacity:.5}button.alt{background:#eef4ee;color:#365943;margin-left:7px}button.danger{background:#b63e3e;color:white}button.danger:hover{background:#983333}.rental-tabs button{flex:1;min-width:120px}.rental-tabs button.tab-selected{background:#2e6649;color:#fff}.rental-tabs button.alt{background:#eef4ee;color:#365943}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.hidden{display:none!important}.status{padding:11px;background:#eef5ee;border-radius:8px;font-size:13px;white-space:pre-wrap}.muted{font-size:12px}@media(max-width:520px){.grid{grid-template-columns:1fr}section{padding:18px}}
 @media(max-width:640px){html,body{overflow-x:hidden}main{margin:0 auto;padding:12px 12px calc(25px + env(safe-area-inset-bottom))}h1{font-size:23px}section{margin-top:12px;padding:17px 14px;border-radius:12px}h2{font-size:18px}.grid{grid-template-columns:1fr}input,textarea,select{font-size:16px;min-height:46px}#login button,#rental button{width:100%;margin:10px 0 0}#signout{width:auto!important}#status{position:relative;line-height:1.5}}</style></head>
 <body><main><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h1>GO Rentals</h1><p>Employee rental entry / Registro de alquiler</p></div><div style="min-width:125px"><label id="langLabel" for="portalLang">Idioma</label><select id="portalLang" aria-label="Idioma / Language"><option value="es">Español</option><option value="en">English</option></select></div></div>
 <section id="auth"><h2>Employee sign in</h2><form id="login"><label>Email<input id="email" type="email" required autocomplete="email"></label><label>Password<input id="password" type="password" required minlength="8" autocomplete="current-password"></label><button type="submit">Sign in</button><button class="alt" type="button" id="signup">Create employee account</button></form><p class="muted">After registering, verify your email. The owner must approve your account before you can send reports.</p></section>
@@ -16,7 +16,11 @@
 <div class="grid"><div><label>Daily rate (USD) — fills automatically, editable<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Gas level / Nivel de combustible<select name="gas_level" required><option value="">Select gas level / Seleccionar nivel</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="3/4">3/4</option><option value="FULL">FULL / Lleno</option></select></label></div></div>
 <label>Add Pictures / Agregar fotos (optional)<input id="rentalPhotos" type="file" accept="image/*,.heic,.heif" multiple><span class="muted">Up to 6 photos, 10 MB each. Take pictures before handing over the vehicle.</span></label><div id="photoSelection" class="muted"></div>
 <label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
-<button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button><button id="deleteRental" type="button" class="danger hidden">Delete rental</button></form><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></section>
+<button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button><button id="deleteRental" type="button" class="danger hidden">Delete rental</button></form><div class="rental-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
+ <button type="button" id="activeRentalTab" class="tab-selected">Mis alquileres / My Rentals</button>
+ <button type="button" id="deletedRentalTab" class="alt">Eliminados / Deleted Rentals</button></div>
+ <div id="activeRentalPanel"><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></div>
+ <div id="deletedRentalPanel" class="hidden"><h2 id="deletedHeading">Alquileres eliminados</h2><p id="deletedHelp" class="muted">Historial de los alquileres que eliminaste. No aparecen en los alquileres activos.</p><div id="deletedRentalsList"></div></div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -43,12 +47,20 @@ function localize(){
  const save=document.querySelector('#send');save.textContent=language==='es'?(save.textContent==='Save changes'||save.textContent==='Guardar cambios'?'Guardar cambios':'Guardar alquiler'):(save.textContent==='Save changes'||save.textContent==='Guardar cambios'?'Save changes':'Save rental');
  for(const el of root.querySelectorAll('[data-edit-rental]'))el.textContent=language==='es'?'Editar alquiler':'Edit rental';
  const deleteButton=document.querySelector('#deleteRental');deleteButton.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
+ document.querySelector('#activeRentalTab').textContent=language==='es'?'Mis alquileres':'My Rentals';
+ document.querySelector('#deletedRentalTab').textContent=language==='es'?'Eliminados':'Deleted Rentals';
+ document.querySelector('#deletedHeading').textContent=language==='es'?'Alquileres eliminados':'Deleted Rentals';
+ document.querySelector('#deletedHelp').textContent=language==='es'?'Historial de los alquileres que eliminaste. No aparecen en los alquileres activos.':'History of rentals you deleted. They are not included in active rentals.';
+ const activeTab=document.querySelector('#activeRentalTab'),deletedTab=document.querySelector('#deletedRentalTab');
+ activeTab.className=showDeleted?'alt':'tab-selected';deletedTab.className=showDeleted?'tab-selected':'alt';
+ document.querySelector('#activeRentalPanel').classList.toggle('hidden',showDeleted);
+ document.querySelector('#deletedRentalPanel').classList.toggle('hidden',!showDeleted);
  for(const item of root.querySelectorAll('[data-delete-entry]'))item.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
 }
 document.querySelector('#portalLang').onchange=e=>{language=e.target.value;localStorage.setItem('go_employee_language',language);localize()};
 const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=message};
 const say=localizedSay;
-let editing=null,vehicles=[],myRentals=[];
+let editing=null,vehicles=[],myRentals=[],myDeletedRentals=[];let showDeleted=false;
 const vehicleSelect=document.querySelector('#vehicle'),plate=document.querySelector('#plate'),rentalForm=document.querySelector('#rental');
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 vehicleSelect.onchange=()=>{
@@ -96,11 +108,30 @@ async function deleteEmployeeRental(id,clickedButton){
   if(data!==true)throw Error('Delete was not confirmed by server.');
   if(editing===id)clearEdit();
   await loadEmployeeData();
+  await loadEmployeeDeletedRentals();
   say('Rental deleted successfully from both employee and owner records.');
  }catch(err){say('Could not delete rental: '+err.message)}
  finally{button.disabled=false;saveButton.disabled=false}
 }
 document.querySelector('#deleteRental').onclick=()=>{void deleteEmployeeRental(editing,document.querySelector('#deleteRental'))};
+document.querySelector('#activeRentalTab').onclick=()=>{showDeleted=false;localize()};
+document.querySelector('#deletedRentalTab').onclick=()=>{showDeleted=true;localize();void loadEmployeeDeletedRentals()};
+async function loadEmployeeDeletedRentals(){
+ const {data,error}=await client.rpc('go_employee_my_deleted_rentals');
+ const list=document.querySelector('#deletedRentalsList');list.replaceChildren();
+ if(error){list.textContent=(language==='es'?'No se pudo cargar el historial: ':'Could not load history: ')+error.message;return}
+ myDeletedRentals=data||[];
+ if(!myDeletedRentals.length){list.textContent=language==='es'?'No hay alquileres eliminados.':'No deleted rentals yet.';return}
+ for(const entry of myDeletedRentals){
+  const r=entry.details||{};const div=document.createElement('div');
+  div.style.cssText='border:1px solid #dfe7df;padding:13px;border-radius:9px;margin:10px 0;line-height:1.6';
+  const title=document.createElement('strong');title.textContent=(r.customerName||r.customer_name||'—')+' · '+(r.vehiclePlate||r.vehicle_plate||'');
+  const details=document.createElement('div');details.textContent=[r.pickup||'',r.pickupTime||'', '→',r.dropoff||'',r.dropoffTime||''].join(' ');
+  const deleted=document.createElement('div');deleted.className='muted';
+  deleted.textContent=(language==='es'?'Eliminado: ':'Deleted: ')+new Date(entry.deleted_at).toLocaleString();
+  div.append(title,details,deleted);list.append(div);
+ }
+}
 async function loadEmployeeData(){
  const [v,r]=await Promise.all([client.rpc('go_employee_vehicles'),client.rpc('go_employee_my_rentals')]);
  if(v.error||r.error){
@@ -145,7 +176,7 @@ const show=user=>{
  if(user.id===OWNER){window.location.replace('/');return}
  auth.classList.add('hidden');report.classList.remove('hidden');
  say('Signed in. Loading your available vehicles and rentals…');
- loadEmployeeData();
+ loadEmployeeData();void loadEmployeeDeletedRentals();
 };
 client.auth.getUser().then(({data,error})=>{if(error)say(error.message);else show(data.user)}).catch(e=>say(e.message));
 document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Signing in…');const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)say(error.message);else{const {data}=await client.auth.getUser();show(data.user)}};

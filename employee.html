@@ -4,7 +4,7 @@
 <style>
 :root{font-family:Inter,system-ui,sans-serif;color:#233629;background:#f7f9f6}*{box-sizing:border-box}body{margin:0}main{max-width:650px;margin:4vh auto;padding:18px}h1{margin:0 0 5px;font-size:27px}h2{font-size:19px}p{line-height:1.5;color:#647567}section{background:#fff;padding:26px;border:1px solid #dfe7df;border-radius:15px;margin-top:16px}label{display:block;font-weight:650;font-size:13px;margin:13px 0 5px}input,textarea,select{display:block;width:100%;padding:12px;border:1px solid #cbd7cb;border-radius:8px;font:inherit}textarea{min-height:85px}button{padding:12px 17px;border:0;background:#2e6649;color:white;border-radius:8px;font-weight:700;cursor:pointer;margin-top:16px}button:disabled{opacity:.5}button.alt{background:#eef4ee;color:#365943;margin-left:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.hidden{display:none!important}.status{padding:11px;background:#eef5ee;border-radius:8px;font-size:13px;white-space:pre-wrap}.muted{font-size:12px}@media(max-width:520px){.grid{grid-template-columns:1fr}section{padding:18px}}
 @media(max-width:640px){html,body{overflow-x:hidden}main{margin:0 auto;padding:12px 12px calc(25px + env(safe-area-inset-bottom))}h1{font-size:23px}section{margin-top:12px;padding:17px 14px;border-radius:12px}h2{font-size:18px}.grid{grid-template-columns:1fr}input,textarea,select{font-size:16px;min-height:46px}#login button,#rental button{width:100%;margin:10px 0 0}#signout{width:auto!important}#status{position:relative;line-height:1.5}}</style></head>
-<body><main><h1>GO Rentals</h1><p>Employee rental entry / Registro de alquiler</p>
+<body><main><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h1>GO Rentals</h1><p>Employee rental entry / Registro de alquiler</p></div><div style="min-width:125px"><label id="langLabel" for="portalLang">Idioma</label><select id="portalLang" aria-label="Idioma / Language"><option value="es">Español</option><option value="en">English</option></select></div></div>
 <section id="auth"><h2>Employee sign in</h2><form id="login"><label>Email<input id="email" type="email" required autocomplete="email"></label><label>Password<input id="password" type="password" required minlength="8" autocomplete="current-password"></label><button type="submit">Sign in</button><button class="alt" type="button" id="signup">Create employee account</button></form><p class="muted">After registering, verify your email. The owner must approve your account before you can send reports.</p></section>
 <section id="report" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>New rental</h2><button class="alt" id="signout" type="button">Sign out</button></div><p>Create a rental directly in GO Rentals. You can edit rentals you submitted below.</p>
 <form id="rental">
@@ -23,7 +23,29 @@
 (()=>{'use strict';
 const OWNER='98eed9ac-b4c6-4c66-8298-923c85d49b94';
 const status=document.querySelector('#status'),auth=document.querySelector('#auth'),report=document.querySelector('#report');
-const say=s=>status.textContent=s;
+const enEs={"Employee rental entry / Registro de alquiler":"Registro de alquileres para empleados","Employee sign in":"Iniciar sesión","Password":"Contraseña","Sign in":"Iniciar sesión","Create employee account":"Crear cuenta","After registering, verify your email. The owner must approve your account before you can send reports.":"Después de registrarte, verifica tu correo. El propietario debe aprobar tu cuenta.","New rental":"Nuevo alquiler","Sign out":"Cerrar sesión","Create a rental directly in GO Rentals. You can edit rentals you submitted below.":"Registra un alquiler directamente en GO Rentals. Puedes editar tus propios alquileres abajo.","Vehicle / Vehículo":"Vehículo","Loading vehicles…":"Cargando vehículos…","License plate / Placa":"Placa","Selected automatically":"Se completa automáticamente","Customer name / Nombre":"Nombre del cliente","Country code":"Código de país","Customer phone / Teléfono":"Teléfono del cliente","Customer email / Correo":"Correo del cliente","Pickup / Entrega":"Fecha de entrega","Return / Devolución":"Fecha de devolución","Daily rate (USD) — fills automatically, editable":"Precio diario (USD) — automático y editable","Gas level / Nivel de combustible":"Nivel de combustible","Select gas level / Seleccionar nivel":"Seleccionar nivel","FULL / Lleno":"LLENO","Add Pictures / Agregar fotos (optional)":"Agregar fotos (opcional)","Up to 6 photos, 10 MB each. Take pictures before handing over the vehicle.":"Hasta 6 fotos de 10 MB cada una. Tómalas antes de entregar el vehículo.","Notes / Notas":"Notas","Additional details for the owner":"Detalles adicionales para el propietario","Save rental":"Guardar alquiler","Cancel editing":"Cancelar edición","My submitted rentals":"Mis alquileres registrados","You can edit rentals you personally entered. Other business records stay private.":"Puedes editar los alquileres que registraste. Los demás datos son privados.","Sign in to see your rentals.":"Inicia sesión para ver tus alquileres.","Checking secure connection…":"Verificando conexión segura…","Unavailable — employee approval needed":"No disponible: falta aprobación","Vehicle list unavailable.":"Lista de vehículos no disponible.","Your account needs one-time owner approval. Ask the owner to approve your registered email under Employee access, then sign out and back in.":"Tu cuenta necesita aprobación del propietario. Pídele que apruebe tu correo en Acceso de empleados y vuelve a iniciar sesión.","Unable to load vehicle list: ":"No se pudo cargar la lista de vehículos: ","No vehicles available. Ask the owner to check their fleet records.":"No hay vehículos disponibles. Consulta al propietario.","Choose a vehicle / Seleccione vehículo":"Selecciona un vehículo","No rentals submitted yet.":"Aún no has registrado alquileres.","Not recorded":"Sin registrar","Edit rental":"Editar alquiler","Save changes":"Guardar cambios","Connection library failed to load. Refresh the page.":"No se pudo conectar. Actualiza la página.","Signed in. Loading your available vehicles and rentals…":"Sesión iniciada. Cargando vehículos y alquileres…","Signing in…":"Iniciando sesión…","Creating account…":"Creando cuenta…","Registration sent. Verify your email, then ask the owner to authorize your account.":"Registro enviado. Verifica tu correo y pide autorización al propietario.","Return must be after pickup.":"La devolución debe ser posterior a la entrega.","Please sign in again.":"Vuelve a iniciar sesión.","Choose a valid vehicle from the list.":"Selecciona un vehículo válido.","Enter the daily rate to save the rental.":"Ingresa el precio diario.","Choose the gas level.":"Selecciona el nivel de combustible.","Saving changes securely…":"Guardando cambios…","Saving new rental securely…":"Guardando alquiler…","Choose up to 6 pictures.":"Selecciona hasta 6 fotos.","Each picture must be smaller than 10 MB.":"Cada foto debe pesar menos de 10 MB.","Only image photos are allowed.":"Solo se permiten imágenes."," picture(s) selected: ":" foto(s) seleccionadas: "," picture(s)":" foto(s)","Rental saved to owner Rentals tab":"Alquiler guardado en el panel del propietario"," with ":" con "," successfully.":" correctamente.","Rental was saved, but pictures could not be fully uploaded: ":"Se guardó el alquiler, pero no se subieron todas las fotos: ",". Keep this form open and retry using Save changes (do not create a new rental).":". Intenta de nuevo con Guardar cambios (no crees otro alquiler).","Rental not saved: ":"No se guardó el alquiler: "};
+const esEn=Object.fromEntries(Object.entries(enEs).map(([en,es])=>[es,en]));
+let language=localStorage.getItem('go_employee_language')==='en'?'en':'es';
+const tx=(value)=>String(value??'').split(/(?<=: )|(?= successfully\.)/).map(part=>language==='es'?(enEs[part]||part):(esEn[part]||part)).join('');
+function localize(){
+ document.documentElement.lang=language;
+ document.querySelector('#portalLang').value=language;
+ document.querySelector('#langLabel').textContent=language==='es'?'Idioma':'Language';
+ const root=document.querySelector('main'),walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+ let node;
+ while(node=walker.nextNode()){
+  if(node.parentElement?.closest('#status,#myrentals,#photoSelection,#langLabel,#portalLang'))continue;
+  const raw=node.nodeValue,trim=raw.trim();
+  const result=language==='es'?enEs[trim]:esEn[trim];
+  if(result)node.nodeValue=raw.replace(trim,result);
+ }
+ for(const el of root.querySelectorAll('[placeholder]')){const raw=el.placeholder,translated=language==='es'?enEs[raw]:esEn[raw];if(translated)el.placeholder=translated}
+ const save=document.querySelector('#send');save.textContent=language==='es'?(save.textContent==='Save changes'||save.textContent==='Guardar cambios'?'Guardar cambios':'Guardar alquiler'):(save.textContent==='Save changes'||save.textContent==='Guardar cambios'?'Save changes':'Save rental');
+ for(const el of root.querySelectorAll('[data-edit-rental]'))el.textContent=language==='es'?'Editar alquiler':'Edit rental';
+}
+document.querySelector('#portalLang').onchange=e=>{language=e.target.value;localStorage.setItem('go_employee_language',language);localize()};
+const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=message};
+const say=localizedSay;
 let editing=null,vehicles=[],myRentals=[];
 const vehicleSelect=document.querySelector('#vehicle'),plate=document.querySelector('#plate'),rentalForm=document.querySelector('#rental');
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -68,11 +90,11 @@ async function loadEmployeeData(){
  vehicles=v.data||[];myRentals=r.data||[];document.querySelector('#send').disabled=vehicles.length===0;if(!vehicles.length)say('No vehicles available. Ask the owner to check their fleet records.');
  vehicleSelect.innerHTML='<option value="">Choose a vehicle / Seleccione vehículo</option>'+vehicles.map(x=>'<option value="'+escapeHTML(x.plate)+'">'+escapeHTML(x.name)+' — '+escapeHTML(x.plate)+'</option>').join('');
  const list=document.querySelector('#myrentals');list.replaceChildren();
- if(!myRentals.length){list.textContent='No rentals submitted yet.';return}
+ if(!myRentals.length){list.textContent='No rentals submitted yet.';localize();return}
  myRentals.forEach(item=>{
   const div=document.createElement('div');div.style.cssText='border:1px solid #dfe7df;padding:12px;border-radius:9px;margin:9px 0';
   const title=document.createElement('div');title.textContent=item.customer_name+' · '+item.vehicle_plate+' · '+item.pickup+' → '+item.dropoff+' · Gas: '+(item.gas_level||'Not recorded');
-  const btn=document.createElement('button');btn.type='button';btn.className='alt';btn.textContent='Edit rental';
+  const btn=document.createElement('button');btn.type='button';btn.className='alt';btn.dataset.editRental='1';btn.textContent='Edit rental';
   btn.onclick=()=>{
    editing=item.id;
    const set=(name,value)=>{rentalForm.elements.namedItem(name).value=value??''};
@@ -85,6 +107,7 @@ async function loadEmployeeData(){
   };
   div.append(title,btn);list.append(div);
  });
+ localize();
 }
 if(!window.supabase?.createClient){say('Connection library failed to load. Refresh the page.');return}
 const client=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW');
@@ -127,5 +150,6 @@ try{
  if(rentalSaved){document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden')}
 }finally{button.disabled=false}
 };
+localize();
 })();
 </script></body></html>

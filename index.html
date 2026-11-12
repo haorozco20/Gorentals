@@ -142,6 +142,10 @@ const btn=document.querySelector('#go-login-btn');
 if(!window.supabase?.createClient){msg('Secure login library could not load. Check your internet connection and refresh.');return}
 goClient=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW',{auth:{persistSession:true,autoRefreshToken:true}});
 async function loadForUser(user){
+if(user.id!=='98eed9ac-b4c6-4c66-8298-923c85d49b94'){
+msg('Employee account detected. Opening employee rental portal…');
+window.location.replace('/employee.html');return;
+}
 goUser=user;msg('Loading your private records…');
 const {data,error}=await goClient.from('go_app_state').select('state,revision').eq('owner_id',user.id).maybeSingle();
 if(error){msg('Database access denied: '+error.message+'. Confirm your email and account authorization.');return}
@@ -206,9 +210,7 @@ async function ownerEmployeeTools(){
    if(!data.length){container.textContent='No pending reports.';return}
    for(const item of data){
     const entry=document.createElement('div');entry.style.cssText='border:1px solid #dfe7df;border-radius:10px;padding:12px;margin:10px 0';
-    const label=document.createElement('p');label.style.whiteSpace='pre-wrap';label.textContent=item.vehicle_plate+' • '+item.customer_name+'\n'+item.pickup+' → '+item.dropoff+'\n'+(item.customer_phone||'')+' • '+(item.customer_email||'')+'\nDaily rate: 
-</script></body></html>+(item.rate??'not supplied')+' • Paid: 
-</script></body></html>+(item.paid??'not supplied')+'\n'+(item.notes||'');entry.appendChild(label);
+    const label=document.createElement('p');label.style.whiteSpace='pre-wrap';label.textContent=[item.vehicle_plate+' • '+item.customer_name,item.pickup+' → '+item.dropoff,(item.customer_phone||'')+' • '+(item.customer_email||''),'Daily rate: $'+(item.rate??'not supplied')+' • Paid: $'+(item.paid??'not supplied'),item.notes||''].join('\n');entry.appendChild(label);
     const accept=document.createElement('button');accept.className='btn primary';accept.textContent='Accept rental';
     const reject=document.createElement('button');reject.className='btn';reject.textContent='Reject';reject.style.marginLeft='7px';
     entry.append(accept,reject);container.appendChild(entry);

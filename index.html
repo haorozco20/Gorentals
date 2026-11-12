@@ -108,7 +108,23 @@ document.querySelector('#go-signup').onclick=async()=>{const email=document.quer
 if(password.length<8){msg('Choose a password of at least 8 characters.');return}
 msg('Creating account…');const {data,error}=await goClient.auth.signUp({email,password});if(error)msg(error.message);else if(data.session)await loadForUser(data.user);else msg('Account request sent. Check your email for verification, then sign in.')};
 const {data:{session},error}=await goClient.auth.getSession();if(error){msg(error.message);return}if(session?.user)await loadForUser(session.user);else msg('Sign in or create your owner account.');
-const bar=document.querySelector('.actions');if(bar){const logout=document.createElement('button');logout.className='btn';logout.textContent='Sign out';logout.onclick=async()=>{goReady=false;goUser=null;await goClient.auth.signOut();document.body.classList.remove('go-unlocked');msg('Signed out');};bar.appendChild(logout)}
+const backupHistory=async()=>{
+ if(!goReady||!goUser)return;
+ cloudStatus('Loading backup history…');
+ const {data,error}=await goClient.from('go_state_history').select('revision,captured_at,state').eq('owner_id',goUser.id).order('revision',{ascending:false}).limit(30);
+ if(error){cloudStatus('Could not load backup history: '+error.message,true);return}
+ const modal=document.createElement('div');modal.className='overlay';const card=document.createElement('div');card.className='modal';const heading=document.createElement('h3');heading.textContent='Previous cloud backups / Respaldos anteriores';card.appendChild(heading);
+ const p=document.createElement('p');p.className='help';p.textContent='Download an earlier saved version before making changes. Restoring a backup requires importing it, which replaces current records. Keep downloaded copies in a secure place.';card.appendChild(p);
+ if(!data?.length){const empty=document.createElement('p');empty.className='help';empty.textContent='No previous versions yet. A backup is created before your next saved change.';card.appendChild(empty)}
+ for(const item of data||[]){
+ const row=document.createElement('div');row.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 0;padding:10px;border:1px solid #e5eae5;border-radius:8px';
+ const label=document.createElement('span');label.textContent='Version '+item.revision+' • '+new Date(item.captured_at).toLocaleString();row.appendChild(label);
+ const dl=document.createElement('button');dl.className='btn';dl.textContent='Download';
+ dl.onclick=()=>{const blob=new Blob([JSON.stringify(item.state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='GO_Rentals_Cloud_Backup_v'+item.revision+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+ row.appendChild(dl);card.appendChild(row)}
+ const close=document.createElement('button');close.className='btn';close.textContent='Close';close.onclick=()=>modal.remove();card.appendChild(close);modal.appendChild(card);document.body.appendChild(modal);cloudStatus('Connected • Saved online')
+};
+const bar=document.querySelector('.actions');if(bar){const history=document.createElement('button');history.className='btn';history.textContent='Cloud backups';history.onclick=backupHistory;bar.appendChild(history);const logout=document.createElement('button');logout.className='btn';logout.textContent='Sign out';logout.onclick=async()=>{goReady=false;goUser=null;await goClient.auth.signOut();document.body.classList.remove('go-unlocked');msg('Signed out');};bar.appendChild(logout)}
 }
 startCloudAuth();})();
 </script></body></html>

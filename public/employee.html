@@ -15,6 +15,7 @@
 <label>Payment method / Método de pago<select name="payment_method"><option value="">Select method / Seleccionar método</option><option value="cash">Cash / Efectivo</option><option value="bank_transfer">Bank Transfer / Transferencia bancaria</option><option value="credit_card">Credit Card / Tarjeta de crédito</option></select></label>
 <label>Add Pictures / Agregar fotos (optional)<input id="rentalPhotos" type="file" accept="image/*,.heic,.heif" multiple><span class="muted">Up to 6 photos, 10 MB each. Take pictures before handing over the vehicle.</span></label><div id="photoSelection" class="muted"></div>
 <label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
+<div id="rentalTotalBox" class="rental-total" role="status" aria-live="polite"><div><strong id="rentalTotalLabel">Total del alquiler</strong><div id="rentalTotalDetails"></div></div><output id="rentalTotalAmount">—</output></div>
 <button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button><button id="deleteRental" type="button" class="danger hidden">Delete rental</button></form><div class="rental-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
  <button type="button" id="activeRentalTab" class="tab-selected">Mis alquileres / My Rentals</button>
  <button type="button" id="deletedRentalTab" class="alt">Eliminados / Deleted Rentals</button></div>
@@ -30,6 +31,7 @@ const esEn=Object.fromEntries(Object.entries(enEs).map(([en,es])=>[es,en]));
 let language=localStorage.getItem('go_employee_language')==='en'?'en':'es';
 const tx=(value)=>String(value??'').split(/(?<=: )|(?= successfully\.)/).map(part=>language==='es'?(enEs[part]||part):(esEn[part]||part)).join('');
 function localize(){
+ updateRentalTotal();
  document.documentElement.lang=language;
  document.querySelector('#portalLang').value=language;
  document.querySelector('#langLabel').textContent=language==='es'?'Idioma':'Language';
@@ -70,14 +72,29 @@ function applyEmployeePermissions(){
  document.querySelector('#photoSelection').classList.toggle('hidden',!employeePermissions.photos);
 }
 const vehicleSelect=document.querySelector('#vehicle'),plate=document.querySelector('#plate'),rentalForm=document.querySelector('#rental');
+
+function updateRentalTotal(){
+ const value=name=>rentalForm.elements.namedItem(name).value;
+ const pickup=value('pickup'),dropoff=value('dropoff'),rate=value('rate');
+ const start=Date.parse(pickup+'T00:00:00Z'),end=Date.parse(dropoff+'T00:00:00Z');
+ const amount=Number(rate),pickupTime=value('pickup_time'),dropoffTime=value('dropoff_time');
+ const valid=Number.isFinite(start)&&Number.isFinite(end)&&rate!==''&&Number.isFinite(amount)&&amount>=0&&amount<=100000&&pickupTime&&dropoffTime&&(dropoff+'T'+dropoffTime)>(pickup+'T'+pickupTime);
+ document.querySelector('#rentalTotalLabel').textContent=language==='es'?'Total del alquiler':'Rental total';
+ const days=valid?Math.max(1,Math.round((end-start)/86400000)):0;
+ const money=n=>new Intl.NumberFormat(language==='es'?'es-NI':'en-US',{style:'currency',currency:'USD'}).format(n);
+ document.querySelector('#rentalTotalAmount').textContent=valid?money(days*amount):'—';
+ document.querySelector('#rentalTotalDetails').textContent=valid?days+(language==='es'?(days===1?' día':' días'):(days===1?' day':' days'))+' × '+money(amount):language==='es'?'Completa fechas, horas y precio diario.':'Enter dates, times, and daily rate.';
+}
+rentalForm.addEventListener('input',updateRentalTotal);
+rentalForm.addEventListener('change',updateRentalTotal);
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 vehicleSelect.onchange=()=>{
  plate.value=vehicleSelect.value;
  const selected=vehicles.find(v=>v.plate===vehicleSelect.value);
  const rateField=rentalForm.elements.namedItem('rate');
- if(!editing){rateField.value=selected?.daily_rate??''}
+ if(!editing){rateField.value=selected?.daily_rate??''}updateRentalTotal();
 };
-const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent='';applyEmployeePermissions()};
+const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent='';applyEmployeePermissions();updateRentalTotal()};
 const photoInput=document.querySelector('#rentalPhotos');
 photoInput.onchange=()=>{const files=[...photoInput.files];document.querySelector('#photoSelection').textContent=files.length?files.length+' picture(s) selected: '+files.map(f=>f.name).join(', '):''};
 const photoExtensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','image/heif':'heif'};
@@ -137,7 +154,23 @@ async function loadEmployeeDeletedRentals(){
   const details=document.createElement('div');details.textContent=[r.pickup||'',r.pickupTime||'', '→',r.dropoff||'',r.dropoffTime||''].join(' ');
   const deleted=document.createElement('div');deleted.className='muted';
   deleted.textContent=(language==='es'?'Eliminado: ':'Deleted: ')+new Date(entry.deleted_at).toLocaleString();
-  div.append(title,details,deleted);list.append(div);
+  div.append(title,details,deleted);
+  if(entry.restored_at){const restored=document.createElement('div');restored.className='muted';restored.textContent=language==='es'?'Restaurado':'Restored';div.appendChild(restored)}
+  else if(entry.can_restore){
+   const restore=document.createElement('button');restore.type='button';restore.className='alt';restore.textContent=language==='es'?'Restaurar alquiler':'Restore rental';
+   restore.onclick=async()=>{
+    if(!confirm(language==='es'?'¿Restaurar este alquiler a la lista activa?':'Restore this rental to the active list?'))return;
+    restore.disabled=true;
+    try{
+     const {data,error}=await client.rpc('go_restore_deleted_rental',{p_rental_id:entry.rental_id});
+     if(error)throw error;if(data!==true)throw Error('Restore was not confirmed.');
+     await loadEmployeeData();await loadEmployeeDeletedRentals();
+     say(language==='es'?'Alquiler restaurado correctamente.':'Rental restored successfully.');
+    }catch(err){say((language==='es'?'No se pudo restaurar: ':'Could not restore: ')+err.message)}
+    finally{restore.disabled=false}
+   };div.appendChild(restore);
+  }
+  list.append(div);
  }
 }
 async function loadEmployeeData(){

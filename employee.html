@@ -102,6 +102,16 @@ document.querySelector('#portalLang').onchange=e=>{language=e.target.value;local
 const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=message};
 const say=localizedSay;
 let editing=null,vehicles=[],myRentals=[],myDeletedRentals=[];let showDeleted=false;
+let employeePermissions={active:true,create:true,edit:true,delete:true,photos:true};
+function applyEmployeePermissions(){
+ const form=document.querySelector('#rental');
+ const canSave=editing?employeePermissions.edit:employeePermissions.create;
+ form.classList.toggle('hidden',!canSave);
+ document.querySelector('#send').disabled=!canSave||!vehicles.length;
+ document.querySelector('#deleteRental').classList.toggle('hidden',!editing||!employeePermissions.delete);
+ photoInput.closest('label').classList.toggle('hidden',!employeePermissions.photos);
+ document.querySelector('#photoSelection').classList.toggle('hidden',!employeePermissions.photos);
+}
 const vehicleSelect=document.querySelector('#vehicle'),plate=document.querySelector('#plate'),rentalForm=document.querySelector('#rental');
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 vehicleSelect.onchange=()=>{
@@ -110,7 +120,7 @@ vehicleSelect.onchange=()=>{
  const rateField=rentalForm.elements.namedItem('rate');
  if(!editing){rateField.value=selected?.daily_rate??''}
 };
-const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent=''};
+const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent='';applyEmployeePermissions()};
 const photoInput=document.querySelector('#rentalPhotos');
 photoInput.onchange=()=>{const files=[...photoInput.files];document.querySelector('#photoSelection').textContent=files.length?files.length+' picture(s) selected: '+files.map(f=>f.name).join(', '):''};
 const photoExtensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','image/heif':'heif'};
@@ -133,7 +143,7 @@ async function uploadRentalPhotos(rentalId,files){
 
 document.querySelector('#cancelEdit').onclick=clearEdit;
 async function deleteEmployeeRental(id,clickedButton){
- if(!id)return;
+ if(!id||!employeePermissions.delete){say(language==='es'?'No tienes permiso para eliminar alquileres.':'You do not have permission to delete rentals.');return}
  const entry=myRentals.find(r=>r.id===id);
  const label=entry?entry.customer_name+' — '+entry.vehicle_plate+' ('+entry.pickup+')':'this rental';
  const confirmText=language==='es'
@@ -174,23 +184,23 @@ async function loadEmployeeDeletedRentals(){
  }
 }
 async function loadEmployeeData(){
- const [v,r]=await Promise.all([client.rpc('go_employee_vehicles'),client.rpc('go_employee_my_rentals')]);
- if(v.error||r.error){
-  const error=v.error||r.error;
+ const [v,r,perm]=await Promise.all([client.rpc('go_employee_vehicles'),client.rpc('go_employee_my_rentals'),client.rpc('go_employee_my_permissions')]);
+ if(v.error||r.error||perm.error){
+  const error=v.error||r.error||perm.error;
   vehicleSelect.innerHTML='<option value="">Unavailable — employee approval needed</option>';
   document.querySelector('#send').disabled=true;
   document.querySelector('#myrentals').textContent='Vehicle list unavailable.';
   say(/approval|authorized|permission|denied/i.test(error.message)?'Your account needs one-time owner approval. Ask the owner to approve your registered email under Employee access, then sign out and back in.':'Unable to load vehicle list: '+error.message);
   return;
  }
- vehicles=v.data||[];myRentals=r.data||[];document.querySelector('#send').disabled=vehicles.length===0;if(!vehicles.length)say('No vehicles available. Ask the owner to check their fleet records.');
+ vehicles=v.data||[];myRentals=r.data||[];employeePermissions=perm.data||{active:false,create:false,edit:false,delete:false,photos:false};applyEmployeePermissions();if(!vehicles.length)say('No vehicles available. Ask the owner to check their fleet records.');
  vehicleSelect.innerHTML='<option value="">Choose a vehicle / Seleccione vehículo</option>'+vehicles.map(x=>'<option value="'+escapeHTML(x.plate)+'">'+escapeHTML(x.name)+' — '+escapeHTML(x.plate)+'</option>').join('');
  const list=document.querySelector('#myrentals');list.replaceChildren();
  if(!myRentals.length){list.textContent='No rentals submitted yet.';localize();return}
  myRentals.forEach(item=>{
   const div=document.createElement('div');div.style.cssText='border:1px solid #dfe7df;padding:12px;border-radius:9px;margin:9px 0';
   const title=document.createElement('div');title.textContent=item.customer_name+' · '+item.vehicle_plate+' · '+item.pickup+' '+(item.pickup_time||'')+' → '+item.dropoff+' '+(item.dropoff_time||'')+' · Gas: '+(item.gas_level||'Not recorded')+' · '+({cash:language==='es'?'Efectivo':'Cash',bank_transfer:language==='es'?'Transferencia bancaria':'Bank Transfer',credit_card:language==='es'?'Tarjeta de crédito':'Credit Card'}[item.payment_method]||'—');
-  const btn=document.createElement('button');btn.type='button';btn.className='alt';btn.dataset.editRental='1';btn.textContent='Edit rental';
+  const btn=document.createElement('button');btn.type='button';btn.className='alt';btn.dataset.editRental='1';btn.textContent='Edit rental';btn.disabled=!employeePermissions.edit;btn.classList.toggle('hidden',!employeePermissions.edit);
   btn.onclick=()=>{
    editing=item.id;
    const set=(name,value)=>{rentalForm.elements.namedItem(name).value=value??''};
@@ -198,7 +208,7 @@ async function loadEmployeeData(){
    const ph=String(item.customer_phone||'');document.querySelector('#code').value=ph.startsWith('+1 ')?'+1':'+505';
    set('phone_local',ph.replace(/^\+(?:505|1)\s*/,''));set('customer_email',item.customer_email);
    set('pickup',item.pickup);set('pickup_time',item.pickup_time||'09:00');set('dropoff',item.dropoff);set('dropoff_time',item.dropoff_time||'17:00');set('rate',item.rate);set('gas_level',item.gas_level||'');set('payment_method',item.payment_method||'');set('notes',item.notes);
-   document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');document.querySelector('#deleteRental').classList.remove('hidden');
+   document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');document.querySelector('#deleteRental').classList.toggle('hidden',!employeePermissions.delete);applyEmployeePermissions();
    localize();
    window.scrollTo({top:document.querySelector('#report').offsetTop,behavior:'smooth'});
   };
@@ -224,7 +234,7 @@ document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Sign
 document.querySelector('#signup').onclick=async()=>{say('Creating account…');const {error}=await client.auth.signUp({email:email.value.trim(),password:password.value});say(error?error.message:'Registration sent. Verify your email, then ask the owner to authorize your account.')};
 document.querySelector('#signout').onclick=async()=>{await client.auth.signOut();window.location.replace('/')};
 document.querySelector('#rental').onsubmit=async e=>{
-e.preventDefault();const button=document.querySelector('#send'),fd=new FormData(e.currentTarget);
+e.preventDefault();if(!(editing?employeePermissions.edit:employeePermissions.create)){say(language==='es'?'No tienes permiso para guardar este alquiler.':'You do not have permission to save this rental.');return}const button=document.querySelector('#send'),fd=new FormData(e.currentTarget);
 const pickup=String(fd.get('pickup')),dropoff=String(fd.get('dropoff'));
 const pickupTime=String(fd.get('pickup_time')),dropoffTime=String(fd.get('dropoff_time'));
 if(!pickupTime||!dropoffTime||!/^([01]\d|2[0-3]):[0-5]\d$/.test(pickupTime)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(dropoffTime)||`${dropoff}T${dropoffTime}`<=`${pickup}T${pickupTime}`){say('Return must be after pickup.');return}
@@ -237,7 +247,7 @@ if(rate===''){say('Enter the daily rate to save the rental.');return}
 if(!['1/4','1/2','3/4','FULL'].includes(gasLevel)){say('Choose the gas level.');return}
 const payload={vehicle_plate:selectedPlate,customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,pickup_time:pickupTime,dropoff_time:dropoffTime,rate:Number(rate),gas_level:gasLevel,payment_method:String(fd.get('payment_method')||''),notes:String(fd.get('notes')||'').trim()};
 button.disabled=true;say(editing?'Saving changes securely…':'Saving new rental securely…');
-const pictures=[...photoInput.files];
+const pictures=employeePermissions.photos?[...photoInput.files]:[];
 if(pictures.length>6){say('Choose up to 6 pictures.');button.disabled=false;return}
 if(pictures.some(f=>f.size>10*1024*1024)){say('Each picture must be smaller than 10 MB.');button.disabled=false;return}
 let rentalSaved=false;
@@ -249,7 +259,7 @@ try{
  clearEdit();await loadEmployeeData();
  say('Rental saved to owner Rentals tab'+(count?' with '+count+' picture(s)':'')+' successfully.');
 }catch(err){say(rentalSaved?'Rental was saved, but pictures could not be fully uploaded: '+err.message+'. Keep this form open and retry using Save changes (do not create a new rental).':'Rental not saved: '+err.message);
- if(rentalSaved){document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden')}
+ if(rentalSaved){document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');applyEmployeePermissions()}
 }finally{button.disabled=false}
 };
 localize();

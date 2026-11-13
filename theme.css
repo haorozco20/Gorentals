@@ -115,3 +115,5 @@ body>main #auth{max-width:520px;margin:40px auto}
 .loan-cards{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:650px){.loan-cards{grid-template-columns:1fr}}
 
 .loan-monthly-total{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid #e4e7ec;margin-top:20px;padding-top:18px;color:#101828}.loan-monthly-total strong:last-child{font-size:24px}
+
+.policy-status{display:inline-block;border-radius:20px;padding:4px 9px;font-size:12px;font-weight:500;background:#f2f4f7;color:#475467}.policy-active{background:#ecfdf3;color:#027a48}.policy-due{background:#fffaeb;color:#b54708}.policy-expired{background:#fef3f2;color:#b42318}.policy-upcoming{background:#eff8ff;color:#175cd3}.insurance-vehicle{border:0;background:transparent;padding:4px 0;text-align:left;color:#465fff;font-weight:500}

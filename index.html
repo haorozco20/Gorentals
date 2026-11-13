@@ -370,7 +370,7 @@ function rentalDirectoryHTML(){
  detail(es?'Devolución':'Return',String(r.dropoff||'')+' '+formatTime(r.dropoffTime))+
  detail(t('rate'),usd(r.rate))+detail(es?'Descuento':'Discount',discount)+
  detail(es?'Cargos adicionales':'Extra charges',usd(r.extras))+detail(t('amount'),usd(r.total))+
- detail(es?'Pago registrado':'Recorded payment',usd(r.paid))+detail(es?'Saldo pendiente':'Balance due',usd(Math.max(0,Number(r.total||0)-Number(r.paid||0))))+
+ detail(es?'Estado del pago':'Payment status',Number(r.paid||0)>=Number(r.total||0)?(es?'Pagado completo':'Paid in full'):(es?'Pago parcial o pendiente':'Partially paid or unpaid'))+detail(es?'Pago registrado':'Recorded payment',usd(r.paid))+detail(es?'Saldo pendiente':'Balance due',usd(Math.max(0,Number(r.total||0)-Number(r.paid||0))))+
  detail(es?'Método de pago':'Payment method',method)+detail(es?'Nivel de combustible':'Gas level',r.gasLevel||'—')+
  detail(es?'Kilometraje inicial':'Starting odometer',r.odometerStart!==''&&r.odometerStart!=null?r.odometerStart+' km':'—')+
  detail(es?'Kilometraje de devolución':'Return odometer',r.odometerEnd!==''&&r.odometerEnd!=null?r.odometerEnd+' km':'—')+

@@ -15,7 +15,10 @@
 <label>Payment method / Método de pago<select name="payment_method"><option value="">Select method / Seleccionar método</option><option value="cash">Cash / Efectivo</option><option value="bank_transfer">Bank Transfer / Transferencia bancaria</option><option value="credit_card">Credit Card / Tarjeta de crédito</option></select></label>
 <label>Add Pictures / Agregar fotos (optional)<input id="rentalPhotos" type="file" accept="image/*,.heic,.heif" multiple><span class="muted">Up to 6 photos, 10 MB each. Take pictures before handing over the vehicle.</span></label><div id="photoSelection" class="muted"></div>
 <label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
+<label id="paidFullLabel" for="paidFull">¿Pagó completo?</label><select id="paidFull" name="paid_in_full" required><option value="">Selecciona una opción</option><option value="yes">Sí, pagó completo</option><option value="no">No, pago parcial o pendiente</option></select>
+<label id="amountPaidField" class="hidden"><span id="amountPaidLabel">Monto recibido (USD)</span><input id="amountPaid" name="paid" type="number" min="0" step="0.01"></label>
 <div id="rentalTotalBox" class="rental-total" role="status" aria-live="polite"><div><strong id="rentalTotalLabel">Total del alquiler</strong><div id="rentalTotalDetails"></div></div><output id="rentalTotalAmount">—</output></div>
+<div class="rental-payment-summary" aria-live="polite"><div><span id="paidSummaryLabel">Monto recibido</span><strong id="paidSummaryAmount">—</strong></div><div><span id="balanceSummaryLabel">Saldo pendiente</span><strong id="balanceSummaryAmount">—</strong></div><p id="paymentValidation" class="warning" role="status"></p></div>
 <button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button><button id="deleteRental" type="button" class="danger hidden">Delete rental</button></form><div class="rental-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
  <button type="button" id="activeRentalTab" class="tab-selected">Mis alquileres / My Rentals</button>
  <button type="button" id="deletedRentalTab" class="alt">Eliminados / Deleted Rentals</button></div>
@@ -84,7 +87,35 @@ function updateRentalTotal(){
  const money=n=>new Intl.NumberFormat(language==='es'?'es-NI':'en-US',{style:'currency',currency:'USD'}).format(n);
  document.querySelector('#rentalTotalAmount').textContent=valid?money(days*amount):'—';
  document.querySelector('#rentalTotalDetails').textContent=valid?days+(language==='es'?(days===1?' día':' días'):(days===1?' day':' days'))+' × '+money(amount):language==='es'?'Completa fechas, horas y precio diario.':'Enter dates, times, and daily rate.';
+ updateRentalPayment(valid?Math.round(days*amount*100)/100:null);
 }
+
+function rentalPaymentValues(total,choice,rawPaid){
+ if(total===null||!Number.isFinite(total)||!['yes','no'].includes(choice))return null;
+ const totalCents=Math.round(total*100),paidCents=choice==='yes'?totalCents:Math.round(Number(rawPaid)*100);
+ if(choice==='no'&&(String(rawPaid).trim()===''||!Number.isFinite(Number(rawPaid))))return null;
+ if(!Number.isFinite(paidCents)||paidCents<0||paidCents>totalCents)return null;
+ return {paid:paidCents/100,balance:(totalCents-paidCents)/100,paidInFull:choice==='yes'};
+}
+function updateRentalPayment(total){
+ const es=language==='es',choice=document.querySelector('#paidFull'),paid=document.querySelector('#amountPaid');
+ document.querySelector('#paidFullLabel').textContent=es?'¿Pagó completo?':'Paid in full?';
+ const labels=es?['Selecciona una opción','Sí, pagó completo','No, pago parcial o pendiente']:['Select an option','Yes, paid in full','No, partially paid or unpaid'];
+ [...choice.options].forEach((option,index)=>option.textContent=labels[index]);
+ document.querySelector('#amountPaidLabel').textContent=es?'Monto recibido (USD)':'Amount received (USD)';
+ const partial=choice.value==='no';document.querySelector('#amountPaidField').classList.toggle('hidden',!partial);paid.required=partial;
+ if(total!==null)paid.max=total.toFixed(2);else paid.removeAttribute('max');
+ if(choice.value==='yes')paid.value=total===null?'':total.toFixed(2);
+ const result=rentalPaymentValues(total,choice.value,paid.value);
+ const money=n=>new Intl.NumberFormat(es?'es-NI':'en-US',{style:'currency',currency:'USD'}).format(n);
+ document.querySelector('#paidSummaryLabel').textContent=es?'Monto recibido':'Amount received';
+ document.querySelector('#balanceSummaryLabel').textContent=es?'Saldo pendiente':'Balance due';
+ document.querySelector('#paidSummaryAmount').textContent=result?money(result.paid):'—';
+ document.querySelector('#balanceSummaryAmount').textContent=result?money(result.balance):'—';
+ document.querySelector('#balanceSummaryAmount').classList.toggle('unpaid-balance',Boolean(result&&result.balance>0));
+ document.querySelector('#paymentValidation').textContent=partial&&paid.value!==''&&total!==null&&!result?(es?'El pago debe estar entre cero y el total del alquiler.':'Payment must be between zero and the rental total.'):'';
+}
+
 rentalForm.addEventListener('input',updateRentalTotal);
 rentalForm.addEventListener('change',updateRentalTotal);
 window.GoDraft.bind(rentalForm,'employee-rental',{get rentalId(){return editing}});
@@ -200,6 +231,7 @@ async function loadEmployeeData(){
    const ph=String(item.customer_phone||'');document.querySelector('#code').value=ph.startsWith('+1 ')?'+1':'+505';
    set('phone_local',ph.replace(/^\+(?:505|1)\s*/,''));set('customer_email',item.customer_email);
    set('pickup',item.pickup);set('pickup_time',item.pickup_time||'09:00');set('dropoff',item.dropoff);set('dropoff_time',item.dropoff_time||'17:00');set('rate',item.rate);set('gas_level',item.gas_level||'');set('payment_method',item.payment_method||'');set('notes',item.notes);
+   set('paid',item.paid??0);const total=Math.max(1,Math.round((Date.parse(item.dropoff+'T00:00:00Z')-Date.parse(item.pickup+'T00:00:00Z'))/86400000))*Number(item.rate||0);set('paid_in_full',Number(item.paid||0)>=total?'yes':'no');
    document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');document.querySelector('#deleteRental').classList.toggle('hidden',!employeePermissions.delete);applyEmployeePermissions();
    localize();
    window.scrollTo({top:document.querySelector('#report').offsetTop,behavior:'smooth'});
@@ -209,7 +241,13 @@ async function loadEmployeeData(){
   del.style.marginLeft='8px';
   del.classList.toggle('hidden',!employeePermissions.delete);
   del.onclick=()=>{void deleteEmployeeRental(item.id,del)};
-  div.append(title,btn,del);list.append(div);
+  const payment=document.createElement('div');payment.className='help';
+  const total=Math.round(Math.max(1,Math.round((Date.parse(item.dropoff+'T00:00:00Z')-Date.parse(item.pickup+'T00:00:00Z'))/86400000))*Number(item.rate||0)*100)/100;
+  const paid=Number(item.paid||0),balance=Math.round(Math.max(0,total-paid)*100)/100;
+  const money=n=>new Intl.NumberFormat(language==='es'?'es-NI':'en-US',{style:'currency',currency:'USD'}).format(n);
+  payment.textContent=(language==='es'?'Pagado: ':'Paid: ')+money(paid)+(language==='es'?' · Saldo pendiente: ':' · Balance due: ')+money(balance);
+  if(balance>0)payment.style.color='#b42318';
+  div.append(title,payment,btn,del);list.append(div);
  });
  localize();
 }
@@ -254,7 +292,10 @@ const selectedPlate=String(fd.get('vehicle_plate')||'').trim();
 if(!vehicles.some(v=>v.plate===selectedPlate)){say('Choose a valid vehicle from the list.');return}
 if(rate===''){say('Enter the daily rate to save the rental.');return}
 if(!['1/4','1/2','3/4','FULL'].includes(gasLevel)){say('Choose the gas level.');return}
-const payload={vehicle_plate:selectedPlate,customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,pickup_time:pickupTime,dropoff_time:dropoffTime,rate:Number(rate),gas_level:gasLevel,payment_method:String(fd.get('payment_method')||''),notes:String(fd.get('notes')||'').trim()};
+const total=Math.round(Math.max(1,Math.round((Date.parse(dropoff+'T00:00:00Z')-Date.parse(pickup+'T00:00:00Z'))/86400000))*Number(rate)*100)/100;
+const payment=rentalPaymentValues(total,String(fd.get('paid_in_full')||''),String(fd.get('paid')||''));
+if(!payment){say(language==='es'?'Indica si pagó completo e ingresa un monto recibido válido.':'Choose whether paid in full and enter a valid amount received.');return}
+const payload={paid:payment.paid,paid_in_full:payment.paidInFull,vehicle_plate:selectedPlate,customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,pickup_time:pickupTime,dropoff_time:dropoffTime,rate:Number(rate),gas_level:gasLevel,payment_method:String(fd.get('payment_method')||''),notes:String(fd.get('notes')||'').trim()};
 button.disabled=true;say(editing?'Saving changes securely…':'Saving new rental securely…');
 const pictures=employeePermissions.photos?[...photoInput.files]:[];
 if(pictures.length>6){say('Choose up to 6 pictures.');button.disabled=false;return}

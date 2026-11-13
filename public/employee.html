@@ -63,8 +63,7 @@ input[type="file"]{font-size:14px;white-space:normal;overflow:hidden}
  <div id="activeRentalPanel"><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></div>
  <div id="deletedRentalPanel" class="hidden"><h2 id="deletedHeading">Alquileres eliminados</h2><p id="deletedHelp" class="muted">Historial de los alquileres que eliminaste. No aparecen en los alquileres activos.</p><div id="deletedRentalsList"></div></div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="/go-auth-session.js"></script><script>
 (()=>{'use strict';
 const OWNER='98eed9ac-b4c6-4c66-8298-923c85d49b94';
 const status=document.querySelector('#status'),auth=document.querySelector('#auth'),report=document.querySelector('#report');
@@ -221,8 +220,8 @@ async function loadEmployeeData(){
  });
  localize();
 }
-if(!window.supabase?.createClient){say('Connection library failed to load. Refresh the page.');return}
-const client=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW');
+if(!window.goTabAuthOptions||!window.supabase?.createClient){say('Connection library failed to load. Refresh the page.');return}
+const client=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW',{auth:window.goTabAuthOptions});
 const show=user=>{
  if(!user){window.location.replace('/');return}
  if(user.id===OWNER){window.location.replace('/');return}

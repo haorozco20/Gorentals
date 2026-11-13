@@ -215,6 +215,7 @@ async function loadEmployeeData(){
   const del=document.createElement('button');del.type='button';del.className='danger';del.dataset.deleteEntry='true';
   del.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
   del.style.marginLeft='8px';
+  del.classList.toggle('hidden',!employeePermissions.delete);
   del.onclick=()=>{void deleteEmployeeRental(item.id,del)};
   div.append(title,btn,del);list.append(div);
  });

@@ -308,6 +308,66 @@ async function ownerEmployeeTools(){
     };
    }
   };refresh();
+  // Separate employee approval/reports from per-employee permissions.
+  const tabBar=document.createElement('div');tabBar.style.cssText='display:flex;gap:8px;margin:16px 0;border-bottom:1px solid #e3eae2;padding-bottom:12px';
+  const generalTab=document.createElement('button');generalTab.className='btn primary';generalTab.textContent='Employee access';
+  const permissionsTab=document.createElement('button');permissionsTab.className='btn';permissionsTab.textContent='Permissions';
+  tabBar.append(generalTab,permissionsTab);
+  const generalView=document.createElement('div');
+  const children=[...panel.children].filter(el=>el!==panel.firstChild&&el!==close);
+  children.forEach(el=>generalView.appendChild(el));
+  const permissionsView=document.createElement('div');permissionsView.style.display='none';
+  panel.insertBefore(tabBar,close);panel.insertBefore(generalView,close);panel.insertBefore(permissionsView,close);
+  const showTab=(tab)=>{
+   const isPermissions=tab==='permissions';
+   generalView.style.display=isPermissions?'none':'block';
+   permissionsView.style.display=isPermissions?'block':'none';
+   permissionsTab.className='btn'+(isPermissions?' primary':'');
+   generalTab.className='btn'+(!isPermissions?' primary':'');
+   if(isPermissions)void loadPermissions();
+  };
+  generalTab.onclick=()=>showTab('general');
+  permissionsTab.onclick=()=>showTab('permissions');
+  approve.addEventListener('click',()=>{if(permissionsView.style.display!=='none')void loadPermissions()});
+  async function loadPermissions(){
+   permissionsView.textContent='Loading employee permissions…';
+   const {data,error}=await goClient.rpc('go_owner_employee_permissions');
+   if(error){permissionsView.textContent='Could not load permissions: '+error.message;return}
+   permissionsView.replaceChildren();
+   const intro=document.createElement('p');intro.className='help';intro.textContent='Choose which actions each employee can perform. Changes take effect immediately on the server. Employees may need to refresh to see updated buttons.';
+   permissionsView.appendChild(intro);
+   if(!data?.length){const empty=document.createElement('p');empty.textContent='No employees approved yet. Approve an account in Employee access first.';permissionsView.appendChild(empty);return}
+   for(const employee of data){
+    const entry=document.createElement('div');entry.style.cssText='border:1px solid #e0e8e0;border-radius:10px;padding:15px;margin:12px 0';
+    const emailHeading=document.createElement('h3');emailHeading.textContent=employee.email||'Employee';emailHeading.style.margin='0 0 10px';entry.appendChild(emailHeading);
+    const switches={};
+    for(const [key,label,detail] of [
+     ['active','Account enabled','Turn off access without deleting the employee account'],
+     ['create','Create rentals','Register a new rental in your Rentals tab'],
+     ['edit','Edit own rentals','Change rentals the employee created'],
+     ['delete','Delete own rentals','Remove their rentals from your active list'],
+     ['photos','Upload vehicle pictures','Attach before-rental photos to their own rentals']
+    ]){
+      const line=document.createElement('label');line.style.cssText='display:flex;align-items:flex-start;gap:10px;margin:11px 0;font-size:13px;cursor:pointer';
+      const input=document.createElement('input');input.type='checkbox';input.checked=Boolean(employee[key]);input.style.cssText='width:18px;height:18px;margin-top:2px;flex:none';switches[key]=input;
+      const textWrap=document.createElement('span');const strong=document.createElement('strong');strong.textContent=label;
+      const desc=document.createElement('div');desc.className='help';desc.textContent=detail;textWrap.append(strong,desc);line.append(input,textWrap);entry.appendChild(line);
+    }
+    const savePermissions=document.createElement('button');savePermissions.className='btn primary';savePermissions.textContent='Save permissions';
+    const feedback=document.createElement('p');feedback.className='help';feedback.setAttribute('role','status');
+    savePermissions.onclick=async()=>{
+      savePermissions.disabled=true;feedback.textContent='Saving…';
+      const {error:saveError}=await goClient.rpc('go_owner_set_employee_permissions',{
+       p_employee_id:employee.employee_id,p_active:switches.active.checked,
+       p_create:switches.create.checked,p_edit:switches.edit.checked,
+       p_delete:switches.delete.checked,p_photos:switches.photos.checked
+      });
+      feedback.textContent=saveError?'Could not save: '+saveError.message:'Permissions saved successfully.';
+      savePermissions.disabled=false;
+    };
+    entry.append(savePermissions,feedback);permissionsView.appendChild(entry);
+   }
+  }
  };
 }
 

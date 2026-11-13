@@ -43,7 +43,7 @@ input[type="file"]{font-size:14px;white-space:normal;overflow:hidden}
  section{padding:14px 10px}
  .rental-tabs{grid-template-columns:minmax(0,1fr)}
 }
-</style></head>
+</style><meta name="theme-color" content="#102b3c"><link rel="stylesheet" href="/theme.css"></head>
 <body><main><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h1>GO Rentals</h1><p>Employee rental entry / Registro de alquiler</p></div><div style="min-width:125px"><label id="langLabel" for="portalLang">Idioma</label><select id="portalLang" aria-label="Idioma / Language"><option value="es">Español</option><option value="en">English</option></select></div></div>
 <section id="auth"><h2>Employee sign in</h2><form id="login"><label>Email<input id="email" type="email" required autocomplete="email"></label><label>Password<input id="password" type="password" required minlength="8" autocomplete="current-password"></label><button type="submit">Sign in</button><button class="alt" type="button" id="signup">Create employee account</button></form><p class="muted">After registering, verify your email. The owner must approve your account before you can send reports.</p></section>
 <section id="report" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>New rental</h2><button class="alt" id="signout" type="button">Sign out</button></div><p>Create a rental directly in GO Rentals. You can edit rentals you submitted below.</p>

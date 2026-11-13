@@ -1,0 +1,103 @@
+/* GO Rentals professional theme — shared by owner and employee portals. */
+:root{--go-ink:#182b3a;--go-muted:#627587;--go-line:#dce5eb;--go-brand:#087f72;--go-navy:#102b3c;color-scheme:light;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;color:var(--go-ink)!important;background:#f3f6f9!important}
+body{background:#f3f6f9!important;color:var(--go-ink)!important;line-height:1.5}
+button,input,select,textarea{font:inherit}
+button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible{outline:3px solid #39bfa8!important;outline-offset:3px}
+input:focus,select:focus,textarea:focus{outline:0!important;border-color:#168e83!important;box-shadow:0 0 0 3px #168e831c!important}
+button:disabled{opacity:.5;cursor:not-allowed}
+.layout{grid-template-columns:230px minmax(0,1fr)!important}
+.side{background:var(--go-navy)!important;color:#fff!important;border-right:0!important;padding:32px 18px!important;gap:32px!important}
+.logo{color:#fff!important;font-size:25px!important;letter-spacing:-1px!important}
+.logo em{color:#67d8bf!important;font-weight:650!important}
+.sub{color:#9db3c2!important;letter-spacing:1.5px!important}
+.nav{gap:7px!important}
+.nav button{color:#c1d1dc!important;border:1px solid transparent!important;border-radius:9px!important;min-height:44px;font-size:13px!important;font-weight:600!important;padding:12px 14px!important}
+.nav button:hover{background:#ffffff0d!important;color:#fff!important}
+.nav button.active{background:#1c4856!important;color:#fff!important;border-color:#3e7b7b!important;box-shadow:inset 3px 0 #60d8bd!important}
+.bottom{border-color:#ffffff20!important;color:#a6bdca!important}
+.main{max-width:1550px!important;padding:38px clamp(22px,3.5vw,54px)!important}
+.eyebrow{color:#61798c!important;font-size:10px!important;letter-spacing:1.6px!important}
+.heading{font-size:32px!important;font-weight:750!important;letter-spacing:-1.2px!important;color:#172f40!important;margin:8px 0 30px!important;line-height:1.2}
+.top{gap:20px!important}
+.actions{gap:8px!important}
+.btn,button.alt{background:#fff!important;color:#29485b!important;border:1px solid #d5e0e7!important;border-radius:8px!important;box-shadow:0 1px 2px #102b3c06!important;font-weight:650!important}
+.btn{min-height:40px;padding:9px 13px!important;font-size:12px!important}
+.btn.primary,button:not(.alt):not(.danger){background:var(--go-brand);color:#fff}
+.btn.primary,#go-auth button,#send,#login button[type="submit"],.rental-tabs button.tab-selected{background:var(--go-brand)!important;border-color:var(--go-brand)!important;color:#fff!important}
+.btn:hover,button.alt:hover{background:#edf4f6!important}
+.btn.primary:hover,#go-auth button:hover,#send:hover,#login button[type="submit"]:hover{background:#06695f!important}
+.btn.danger,button.danger,.mini.red{background:#fff4f3!important;color:#ad3434!important;border:1px solid #f0d1ce!important}
+.cards{gap:16px!important;margin-bottom:24px!important}
+.card,.panel{background:#fff!important;border:1px solid #e0e7ed!important;border-radius:13px!important;padding:23px!important;box-shadow:0 3px 14px #183b5005!important}
+.card{border-top:3px solid #199b88!important}
+.card small{color:#587084!important;font-size:10px!important;letter-spacing:1.1px!important}
+.card strong{font-size:31px!important;letter-spacing:-1px!important;color:#183447!important}
+.card span{color:#687e8f!important}
+.panel h3,.section-head h3{color:#19374a!important;font-size:16px!important;font-weight:720!important}
+.section-head{padding-bottom:15px;border-bottom:1px solid #edf1f5}
+.grid2{gap:20px!important}
+.muted,.help{color:var(--go-muted)!important}
+.help{line-height:1.7!important}
+.notice{background:#eef5f7!important;color:#436173!important;border:1px solid #d9e7ee!important;padding:13px 16px!important;font-size:12px!important;line-height:1.65!important;border-radius:9px!important}
+table{font-size:13px!important}
+th{background:#f5f8fa!important;color:#566f81!important;font-size:10px!important;letter-spacing:.8px!important;padding:14px 12px!important;border-bottom:1px solid #dfe7ed!important}
+td{color:#334e60!important;padding:16px 12px!important;border-bottom:1px solid #edf1f5!important}
+tbody tr:hover{background:#f8fbfc}
+.tag{background:#e5f5ef!important;color:#176954!important;border-radius:6px!important;padding:5px 9px!important}
+.tag.out{background:#edf1f6!important;color:#586e82!important}
+.mini{background:#f0f5f8!important;border:1px solid #dce7ed!important;color:#345a70!important;min-height:34px;border-radius:6px!important}
+.bar{background:#e7eef3!important}.bar i{background:#109782!important}
+input,select,textarea{background:#fff!important;border:1px solid #cfdae3!important;color:#203d50!important;border-radius:8px!important;min-height:43px;padding:10px 12px!important;transition:border-color .15s,box-shadow .15s}
+input::placeholder,textarea::placeholder{color:#7b8e9c!important}
+input[readonly]{background:#f3f6f9!important;color:#61798a!important}
+input[type="checkbox"]{min-height:0;padding:0!important;accent-color:var(--go-brand)}
+.field label,label{color:#3e596c!important;font-weight:650!important}
+.overlay{background:#0b223ba8!important;backdrop-filter:blur(4px)}
+.modal{border:1px solid #e1e8ee!important;border-radius:15px!important;box-shadow:0 28px 90px #0c223f38!important;padding:27px!important}
+.modal h3{color:#18394b!important}
+.foot{border-top:1px solid #e7edf2;padding-top:18px}
+#go-auth{background:radial-gradient(ellipse at 15% 15%,#214f61 0,transparent 55%),linear-gradient(140deg,#102b3c,#0b1d2c)!important}
+#go-auth .go-login-card{border:1px solid #ffffff30!important;border-top:4px solid #18a78e!important;border-radius:17px!important;padding:36px!important;width:min(440px,100%)!important;box-shadow:0 30px 90px #00000030!important}
+#go-auth h1{color:#16394a!important;font-size:31px!important;letter-spacing:-1px}
+#go-auth p{color:#60798a!important}
+#go-auth form{gap:16px!important;margin-top:24px}
+#go-auth #go-auth-status{color:#765a30!important}
+#go-auth #go-signup{background:#eef5f7!important;color:#245569!important;padding:7px 11px!important}
+#go-cloud-status{border-color:#d3e3e7!important;border-radius:10px!important;box-shadow:0 4px 20px #18384e12!important;color:#326354!important}
+#go-cloud-status.go-failure{color:#a23030!important;border-color:#e1aaaa!important}
+/* Employee portal */
+body>main{max-width:780px;margin:36px auto;padding:0 22px 40px}
+body>main>div:first-child{padding:24px 26px;background:var(--go-navy);border-radius:14px;color:#fff;box-shadow:0 6px 24px #17394a12}
+body>main h1{color:inherit;font-size:28px;letter-spacing:-.8px;font-weight:750}
+body>main>div:first-child p{color:#b4cbd7;font-size:12px;margin:5px 0 0}
+body>main>div:first-child label{color:#c1d5df!important;font-size:11px;margin-top:0}
+body>main section{border:1px solid #dce5ec;border-radius:13px;padding:28px;margin-top:20px;box-shadow:0 3px 14px #183b5005}
+body>main h2{color:#193b4e;font-size:19px;letter-spacing:-.4px;margin-top:0}
+body>main p{color:#62798a;font-size:13px}
+body>main label{font-size:12px;line-height:1.65;margin-top:17px}
+body>main label input,body>main label select,body>main label textarea{margin-top:6px}
+body>main button{border-radius:8px;font-size:13px;min-height:43px;padding:11px 17px;transition:background .15s}
+body>main .grid{gap:0 18px}
+body>main .status{background:#eaf2f6;border:1px solid #d9e6ed;color:#3d6276;padding:14px 17px;border-radius:9px}
+.rental-tabs{border-top:1px solid #e1e9ef;padding-top:20px;margin-bottom:24px}
+.rental-tabs button{margin-top:0}
+#rentalPhotos{background:#f6f9fb!important;border:1px dashed #a9bdcb!important;padding:15px!important}
+#rentalPhotos::file-selector-button{border:0;background:#e2edf2;color:#2a5267;padding:8px 11px;margin-right:10px;border-radius:5px}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}.grid2{grid-template-columns:1fr!important}}
+@media(max-width:720px){
+ .layout{grid-template-columns:1fr!important}.side{padding:13px 14px!important;gap:12px!important;border-bottom:1px solid #284c60!important}
+ .logo{font-size:22px!important}.nav{gap:5px!important}.nav button{min-height:42px;font-size:12px!important;padding:9px 12px!important}
+ .nav button.active{box-shadow:inset 0 -2px #60d8bd!important}
+ .main{padding:23px 14px 88px!important}.heading{font-size:26px!important;margin-bottom:19px!important}
+ .top{gap:12px!important}.actions{padding-bottom:10px}.btn{min-height:42px}
+ .cards{gap:10px!important}.card,.panel{padding:16px!important}.card strong{font-size:25px!important}
+ .modal{padding:22px 16px!important;border-radius:16px 16px 0 0!important}
+ input,select,textarea{font-size:16px!important;min-height:46px}
+ #go-auth .go-login-card{padding:27px 23px!important}
+ body>main{width:100%;padding:14px 12px 35px;margin:0 auto}
+ body>main>div:first-child{padding:20px 17px;gap:12px;flex-wrap:wrap}
+ body>main h1{font-size:25px}body>main section{padding:21px 16px;margin-top:14px}
+ body>main .grid{grid-template-columns:minmax(0,1fr);gap:0}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}

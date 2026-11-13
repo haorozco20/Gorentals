@@ -1,0 +1,4 @@
+(()=>{'use strict';window.GoCurrency={
+ convert(amount,currency,rate){const raw=Number(amount),fx=currency==='NIO'?Number(rate):1;if(String(amount).trim()===''||!Number.isFinite(raw)||raw<0||!['USD','NIO'].includes(currency)||!Number.isFinite(fx)||fx<=0)return null;return {paid:Math.round(raw/fx*100)/100,paymentCurrency:currency,paymentOriginalAmount:Math.round(raw*100)/100,paymentExchangeRate:fx}},
+ describe(r,es){if(r.paymentCurrency!=='NIO')return '';return (es?'Cobrado en córdobas: ':'Collected in córdobas: ')+new Intl.NumberFormat(es?'es-NI':'en-US',{style:'currency',currency:'NIO'}).format(r.paymentOriginalAmount||0)+(es?' · Tipo de cambio: C$':' · Exchange rate: C$')+Number(r.paymentExchangeRate||0)+' / US$1'}
+};})();

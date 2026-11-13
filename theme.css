@@ -122,3 +122,5 @@ body>main #auth{max-width:520px;margin:40px auto}
 
 /* Warnings consistently use red, with a text label for meaning. */
 .policy-due,.policy-expired,.policy-missing{background:#fef3f2;color:#b42318}.notice.warning,body>main .status.warning{background:#fef3f2;border-color:#fecdca;color:#b42318}[role="alert"]{color:#b42318}.go-failure{color:#b42318!important;border-color:#fecdca!important;background:#fef3f2!important}input:user-invalid,select:user-invalid,textarea:user-invalid{border-color:#f04438}input:user-invalid:focus,select:user-invalid:focus,textarea:user-invalid:focus{box-shadow:0 0 0 4px #f044381a}.policy-due+ .muted{color:#b42318}
+
+.loan-payment-breakdown{margin-top:18px;border:1px solid #e4e7ec;border-radius:10px;background:#f9fafb;padding:16px}.loan-payment-breakdown>div{display:flex;justify-content:space-between;gap:14px;padding:7px 0;flex-wrap:wrap}.loan-payment-breakdown strong{color:#101828;font-weight:600}.loan-payment-grand-total{border-top:1px solid #e4e7ec;margin-top:9px;padding-top:14px!important}.loan-payment-grand-total strong{font-size:23px}

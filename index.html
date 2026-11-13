@@ -186,28 +186,47 @@ function loanForm(id){
  field(es?'Monto financiado USD':'Amount financed USD','loanOriginalPrincipal',vehicle.loanOriginalPrincipal??'','number','min="0.01" step="0.01"')+
  field(es?'Tasa de interés anual (%)':'Annual interest rate (%)','loanAnnualInterestRate',vehicle.loanAnnualInterestRate??'','number','min="0" max="100" step="0.001"')+
  field(es?'Plazo del préstamo (meses)':'Loan term (months)','loanTermMonths',vehicle.loanTermMonths??'','number','min="1" max="600" step="1"')+
- field(es?'Pago mensual USD':'Monthly payment USD','loanPayment',vehicle.loanPayment||0,'number','min="0" step="0.01" required')+
+ field(es?'Cuota del préstamo / banco USD':'Loan / lender payment USD','loanPayment',vehicle.loanPayment||0,'number','min="0" step="0.01" required')+
  field(es?'Seguro de vida / desgravamen mensual USD':'Monthly death insurance fee USD','loanDeathInsuranceFee',vehicle.loanDeathInsuranceFee??0,'number','min="0" step="0.01" required')+
  pick(es?'Cobro del seguro de vida':'Death insurance billing','loanDeathInsuranceIncluded',[['no',es?'Se cobra aparte':'Charged separately'],['yes',es?'Ya incluido en la cuota':'Already included in loan payment']],vehicle.loanDeathInsuranceIncluded?'yes':'no')+
  field(es?'Inicio del préstamo':'Loan start date','loanStartDate',vehicle.loanStartDate||'','date')+
  field(es?'Próximo vencimiento':'Next payment due','loanNextDue',vehicle.loanNextDue||'','date')+
  field(es?'Fecha final del préstamo':'Loan end date','loanEndDate',vehicle.loanEndDate||'','date')+
  reviewField(t('notes'),'loanNotes',vehicle.loanNotes||'')+
- '</div><p id="loan-calculation-help" class="help" role="status" aria-live="polite"></p><div class="foot"><button class="btn" type="button" id="loan-close">'+t('cancel')+'</button><button class="btn primary" type="submit">'+t('save')+'</button></div></form>');
+ '</div><p id="loan-calculation-help" class="help" role="status"></p><div id="loan-payment-breakdown" class="loan-payment-breakdown" role="status" aria-live="polite"></div><div class="foot"><button class="btn" type="button" id="loan-close">'+t('cancel')+'</button><button class="btn primary" type="submit">'+t('save')+'</button></div></form>');
  const chooser=document.querySelector('#f_loanVehicle');if(id)chooser.disabled=true;
  const calculationFields=['loanPaymentMode','loanOriginalPrincipal','loanAnnualInterestRate','loanTermMonths'];
+
  const updateCalculation=()=>{
   const get=key=>document.querySelector('#f_'+key);
-  const paidOff=get('loanStatus').value==='paid_off';const automatic=get('loanPaymentMode').value==='auto'&&!paidOff;
-  get('loanPayment').readOnly=automatic;
+  const paidOff=get('loanStatus').value==='paid_off';
+  const automatic=get('loanPaymentMode').value==='auto'&&!paidOff;
+  get('loanPayment').readOnly=automatic||paidOff;
+  get('loanDeathInsuranceIncluded').disabled=automatic;
+  if(automatic)get('loanDeathInsuranceIncluded').value='no';
   for(const key of calculationFields.slice(1)){get(key).required=automatic;get(key).disabled=!automatic}
   const help=document.querySelector('#loan-calculation-help');
-  if(paidOff){get('loanPayment').value=byId('vehicles',chooser.value)?.loanPayment||0;get('loanPayment').readOnly=true;help.textContent=es?'Este préstamo no se incluirá en el total mensual.':'This loan will be excluded from the monthly total.';return}
-  if(!automatic){help.textContent=es?'Se usará el pago mensual indicado por el banco.':'The monthly payment supplied by your lender will be used.';return}
-  const payment=calculateMonthlyLoanPayment(get('loanOriginalPrincipal').value,get('loanAnnualInterestRate').value,get('loanTermMonths').value);
-  get('loanPayment').value=payment===null?'':payment.toFixed(2);
-  help.textContent=payment===null?(es?'Completa monto financiado, tasa anual y plazo para calcular el pago.':'Enter amount financed, annual rate, and term to calculate the payment.'):(es?'Pago calculado para un préstamo con tasa fija y pagos mensuales. No incluye seguros, comisiones ni pago final extraordinario.':'Calculated for a fixed-rate loan with monthly payments. Excludes insurance, fees, and balloon payments.');
+  if(paidOff){
+   get('loanPayment').value=byId('vehicles',chooser.value)?.loanPayment||0;
+   help.textContent=es?'Este préstamo no se incluirá en el total mensual.':'This loan will be excluded from the monthly total.';
+  }else if(!automatic){
+   help.textContent=es?'Se usará la cuota del banco, más el seguro cobrado aparte. Si ya incluye el seguro, no se suma otra vez.':'Uses the lender payment plus insurance charged separately. Insurance already included is not added twice.';
+  }else{
+   const payment=calculateMonthlyLoanPayment(get('loanOriginalPrincipal').value,get('loanAnnualInterestRate').value,get('loanTermMonths').value);
+   get('loanPayment').value=payment===null?'':payment.toFixed(2);
+   help.textContent=payment===null?(es?'Completa monto financiado, tasa anual y plazo.':'Enter amount financed, annual rate, and term.'):(es?'Capital e intereses calculados a tasa fija. El total agrega el seguro de vida mensual. No incluye otros cargos ni pago final extraordinario.':'Principal and interest calculated at a fixed rate. The total adds monthly death insurance. Other fees and balloon payments are excluded.');
+  }
+  const rawPayment=get('loanPayment').value,rawFee=get('loanDeathInsuranceFee').value;
+  const payment=Number(rawPayment),fee=Number(rawFee),included=get('loanDeathInsuranceIncluded').value==='yes';
+  const valid=rawPayment!==''&&rawFee!==''&&Number.isFinite(payment)&&payment>=0&&Number.isFinite(fee)&&fee>=0;
+  const total=paidOff?0:valid?Math.round((payment+(included?0:fee))*100)/100:null;
+  document.querySelector('#loan-payment-breakdown').innerHTML=
+   '<div><span>'+(es?'Cuota del préstamo / banco':'Loan / lender payment')+'</span><strong>'+esc(rawPayment!==''&&Number.isFinite(payment)?usd(payment):'—')+'</strong></div>'+
+   '<div><span>'+(es?'Seguro de vida mensual':'Monthly death insurance')+(included?(es?' (ya incluido)':' (already included)'):'')+'</span><strong>'+esc(rawFee!==''&&Number.isFinite(fee)?usd(fee):'—')+'</strong></div>'+
+   '<div class="loan-payment-grand-total"><span>'+(es?'Pago mensual total':'Total monthly payment')+'</span><strong>'+esc(total===null?'—':usd(total))+'</strong></div>';
  };
+ ['loanPayment','loanDeathInsuranceFee','loanDeathInsuranceIncluded'].forEach(key=>document.querySelector('#f_'+key).addEventListener('input',updateCalculation));
+ document.querySelector('#f_loanDeathInsuranceIncluded').addEventListener('change',updateCalculation);
  document.querySelector('#f_loanStatus').addEventListener('change',updateCalculation);
  calculationFields.forEach(key=>document.querySelector('#f_'+key).addEventListener('input',updateCalculation));
  document.querySelector('#f_loanPaymentMode').addEventListener('change',()=>{
@@ -229,7 +248,7 @@ function loanForm(id){
   if(values.loanStatus==='paid_off'&&balance>0){alert(es?'Un préstamo pagado debe tener saldo cero.':'A paid-off loan must have a zero balance.');return}
   if(values.loanStartDate&&values.loanEndDate&&values.loanEndDate<values.loanStartDate){alert(es?'La fecha final no puede ser anterior al inicio.':'End date cannot be before the start date.');return}
   Object.assign(v,{loan:balance,loanPayment:payment,loanLender:String(values.loanLender||'').trim(),loanStartDate:values.loanStartDate||'',loanNextDue:values.loanNextDue||'',loanEndDate:values.loanEndDate||'',loanNotes:String(values.loanNotes||'').trim()});
-  v.loanDeathInsuranceFee=Math.round(deathFee*100)/100;v.loanDeathInsuranceIncluded=values.loanDeathInsuranceIncluded==='yes';
+  v.loanDeathInsuranceFee=Math.round(deathFee*100)/100;v.loanDeathInsuranceIncluded=!automatic&&values.loanDeathInsuranceIncluded==='yes';
   v.loanPaidOff=values.loanStatus==='paid_off';v.loanPaymentMode=values.loanPaymentMode;
   if(automatic){v.loanOriginalPrincipal=Number(values.loanOriginalPrincipal);v.loanAnnualInterestRate=Number(values.loanAnnualInterestRate);v.loanTermMonths=Number(values.loanTermMonths)}
   if(balance>0)v.ownership='financed';

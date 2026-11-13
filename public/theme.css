@@ -109,3 +109,5 @@ body>main #auth{max-width:520px;margin:40px auto}
 .customer-search{border-bottom:1px solid #eaecf0;padding:0 0 20px;margin:0 0 12px}.customer-search label{display:block;margin-bottom:8px}.customer-search input{flex:1;min-width:140px;width:auto}.customer-search .actions{flex-wrap:wrap}
 
 .fleet-plate{font-size:12px;color:#667085;font-weight:400}
+
+.go-time-picker{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px;min-width:0}.go-time-picker select{width:100%;min-width:0;padding-left:10px;padding-right:6px}body>main label .go-time-picker{margin-top:7px}

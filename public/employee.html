@@ -58,7 +58,7 @@ function localize(){
  for(const item of root.querySelectorAll('[data-delete-entry]'))item.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
 }
 document.querySelector('#portalLang').onchange=e=>{language=e.target.value;localStorage.setItem('go_employee_language',language);localize()};
-const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=message};
+const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=message;status.classList.toggle('warning',/failed|could not|not saved|unavailable|denied|permission|approval|required|exceed|invalid|must be|please sign in|choose a|enter the|no se pudo|no se guardó|no disponible|permiso|aprobación|debe|supera|ingresa|selecciona|vuelve a iniciar/i.test(message))};
 const say=localizedSay;
 let editing=null,vehicles=[],myRentals=[],myDeletedRentals=[];let showDeleted=false;
 let employeePermissions={active:true,create:true,edit:true,delete:true,photos:true};

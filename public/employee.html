@@ -8,7 +8,7 @@
 <form id="rental">
 <label>Vehicle / Vehículo<select id="vehicle" name="vehicle_plate" required><option value="">Loading vehicles…</option></select></label><label>License plate / Placa<input id="plate" readonly placeholder="Selected automatically"></label>
 <label>Customer name / Nombre<input name="customer_name" required minlength="2" maxlength="140"></label>
-<div class="grid"><div><label>Country code</label><select id="code"><option value="+505">🇳🇮 Nicaragua +505</option><option value="+1">🇺🇸 USA +1</option></select></div><div><label>Customer phone / Teléfono</label><input name="phone_local" type="tel" maxlength="30" placeholder="8888 8888"></div></div>
+<div class="grid"><div><label>Country code</label><select id="code" name="phone_country_code"><option value="+505">🇳🇮 Nicaragua +505</option><option value="+1">🇺🇸 USA +1</option></select></div><div><label>Customer phone / Teléfono</label><input name="phone_local" type="tel" maxlength="30" placeholder="8888 8888"></div></div>
 <label>Customer email / Correo<input name="customer_email" type="email" maxlength="254"></label>
 <div class="grid"><div><label>Pickup / Entrega<input name="pickup" type="date" required></label></div><div><label>Pickup time / Hora de entrega<input name="pickup_time" type="time" value="09:00" required></label></div><div><label>Return / Devolución<input name="dropoff" type="date" required></label></div><div><label>Return time / Hora de devolución<input name="dropoff_time" type="time" value="17:00" required></label></div></div>
 <div class="grid"><div><label>Daily rate (USD) — fills automatically, editable<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Gas level / Nivel de combustible<select name="gas_level" required><option value="">Select gas level / Seleccionar nivel</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="3/4">3/4</option><option value="FULL">FULL / Lleno</option></select></label></div></div>
@@ -22,7 +22,7 @@
  <div id="activeRentalPanel"><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></div>
  <div id="deletedRentalPanel" class="hidden"><h2 id="deletedHeading">Alquileres eliminados</h2><p id="deletedHelp" class="muted">Historial de los alquileres que eliminaste. No aparecen en los alquileres activos.</p><div id="deletedRentalsList"></div></div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="/go-auth-session.js"></script><script src="/go-time.js"></script><script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="/go-auth-session.js"></script><script src="/go-time.js"></script><script src="/go-drafts.js"></script><script>
 (()=>{'use strict';const formatTime=value=>window.GoTime.format(value);
 const OWNER='98eed9ac-b4c6-4c66-8298-923c85d49b94';
 const status=document.querySelector('#status'),auth=document.querySelector('#auth'),report=document.querySelector('#report');
@@ -87,6 +87,7 @@ function updateRentalTotal(){
 }
 rentalForm.addEventListener('input',updateRentalTotal);
 rentalForm.addEventListener('change',updateRentalTotal);
+window.GoDraft.bind(rentalForm,'employee-rental',{get rentalId(){return editing}});
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 vehicleSelect.onchange=()=>{
  plate.value=vehicleSelect.value;
@@ -94,7 +95,7 @@ vehicleSelect.onchange=()=>{
  const rateField=rentalForm.elements.namedItem('rate');
  if(!editing){rateField.value=selected?.daily_rate??''}updateRentalTotal();
 };
-const clearEdit=()=>{editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent='';applyEmployeePermissions();updateRentalTotal()};
+const clearEdit=()=>{window.GoDraft.clear('employee-rental');editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent='';applyEmployeePermissions();updateRentalTotal()};
 const photoInput=document.querySelector('#rentalPhotos');
 photoInput.onchange=()=>{const files=[...photoInput.files];document.querySelector('#photoSelection').textContent=files.length?files.length+' picture(s) selected: '+files.map(f=>f.name).join(', '):''};
 const photoExtensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','image/heif':'heif'};
@@ -176,6 +177,7 @@ async function loadEmployeeDeletedRentals(){
 async function loadEmployeeData(){
  const [v,r,perm]=await Promise.all([client.rpc('go_employee_vehicles'),client.rpc('go_employee_my_rentals'),client.rpc('go_employee_my_permissions')]);
  if(v.error||r.error||perm.error){
+  employeePermissions={active:false,create:false,edit:false,delete:false,photos:false};applyEmployeePermissions();
   const error=v.error||r.error||perm.error;
   vehicleSelect.innerHTML='<option value="">Unavailable — employee approval needed</option>';
   document.querySelector('#send').disabled=true;
@@ -221,12 +223,25 @@ const show=async user=>{
  if(workspace?.owner_id){window.location.replace('/');return}
  auth.classList.add('hidden');report.classList.remove('hidden');
  say('Signed in. Loading your available vehicles and rentals…');
- loadEmployeeData();void loadEmployeeDeletedRentals();
+ window.GoDraft.setUser(user.id);
+ await loadEmployeeData();void loadEmployeeDeletedRentals();
+ const draft=window.GoDraft.read('employee-rental');
+ if(draft&&employeePermissions.active){
+  const id=draft.metadata?.rentalId;
+  if((!id&&employeePermissions.create)||(id&&employeePermissions.edit&&myRentals.some(r=>r.id===id))){
+   editing=id||null;window.GoDraft.restore(rentalForm,draft);plate.value=vehicleSelect.value;
+   document.querySelector('#send').textContent=editing?'Save changes':'Save rental';
+   document.querySelector('#cancelEdit').classList.toggle('hidden',!editing);
+   applyEmployeePermissions();updateRentalTotal();localize();
+   say(language==='es'?'Formulario sin terminar recuperado. Revisa los datos antes de guardar.':'Unfinished form restored. Review the details before saving.');
+  }else window.GoDraft.clear('employee-rental');
+ }
+
 };
 client.auth.getUser().then(({data,error})=>{if(error)say(error.message);else return show(data.user)}).catch(e=>say(e.message));
 document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Signing in…');const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)say(error.message);else{const {data}=await client.auth.getUser();await show(data.user)}};
 document.querySelector('#signup').onclick=async()=>{say('Creating account…');const {error}=await client.auth.signUp({email:email.value.trim(),password:password.value});say(error?error.message:'Registration sent. Verify your email, then ask the owner to authorize your account.')};
-document.querySelector('#signout').onclick=async()=>{await client.auth.signOut();window.location.replace('/')};
+document.querySelector('#signout').onclick=async()=>{window.GoDraft.clearAll();await client.auth.signOut();window.location.replace('/')};
 document.querySelector('#rental').onsubmit=async e=>{
 e.preventDefault();if(!(editing?employeePermissions.edit:employeePermissions.create)){say(language==='es'?'No tienes permiso para guardar este alquiler.':'You do not have permission to save this rental.');return}const button=document.querySelector('#send'),fd=new FormData(e.currentTarget);
 const pickup=String(fd.get('pickup')),dropoff=String(fd.get('dropoff'));
@@ -253,7 +268,7 @@ try{
  clearEdit();await loadEmployeeData();
  say('Rental saved to owner Rentals tab'+(count?' with '+count+' picture(s)':'')+' successfully.');
 }catch(err){say(rentalSaved?'Rental was saved, but pictures could not be fully uploaded: '+err.message+'. Keep this form open and retry using Save changes (do not create a new rental).':'Rental not saved: '+err.message);
- if(rentalSaved){document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');applyEmployeePermissions()}
+ if(rentalSaved){rentalForm.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');applyEmployeePermissions()}
 }finally{button.disabled=false}
 };
 localize();

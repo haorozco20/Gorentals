@@ -1,7 +1,8 @@
-/* Sessions belong to this tab; only the email is remembered across visits. */
+/* Remember login across tabs and browser restarts; explicit sign-out clears it. */
 (()=>{
  'use strict';
- const sessionKey='go_rentals_tab_auth_v1';
+ const sessionKey='go_rentals_persistent_auth_v2';
+ const oldTabKey='go_rentals_tab_auth_v1';
  const emailKey='go_rentals_login_email';
  const legacyKey='sb-wfbwstaxrqkilmkzwbzz-auth-token';
  let remembered='';
@@ -13,7 +14,9 @@
    if(remembered)localStorage.setItem(emailKey,remembered);
   }
  }catch{}
- // Never reuse the old browser-wide login.
+ // Migrate existing sessions once, preserving the currently signed-in account.
+ try{if(!localStorage.getItem(sessionKey)){const previous=sessionStorage.getItem(oldTabKey)||localStorage.getItem(legacyKey);if(previous)localStorage.setItem(sessionKey,previous)}sessionStorage.removeItem(oldTabKey)}catch{}
+ // Retire superseded keys after migration.
  try{localStorage.removeItem(legacyKey);localStorage.removeItem(legacyKey+'-code-verifier');localStorage.removeItem(legacyKey+'-user')}catch{}
  const input=document.querySelector('#go-email, #email');
  const rememberEmail=()=>{
@@ -25,12 +28,12 @@
   input.addEventListener('change',rememberEmail);
   input.form?.addEventListener('submit',rememberEmail,true);
  }
- // Use memory if browser storage is unavailable; never fall back to localStorage.
+ // If browser storage is blocked, keep this session in memory.
  const memory=new Map();
  const storage={
-  getItem(key){try{return sessionStorage.getItem(key)}catch{return memory.get(key)||null}},
-  setItem(key,value){memory.set(key,value);try{sessionStorage.setItem(key,value)}catch{}},
-  removeItem(key){memory.delete(key);try{sessionStorage.removeItem(key)}catch{}}
+  getItem(key){try{return localStorage.getItem(key)}catch{return memory.get(key)||null}},
+  setItem(key,value){memory.set(key,value);try{localStorage.setItem(key,value)}catch{}},
+  removeItem(key){memory.delete(key);try{localStorage.removeItem(key)}catch{}}
  };
  window.goTabAuthOptions={persistSession:true,autoRefreshToken:true,storageKey:sessionKey,storage};
 })();

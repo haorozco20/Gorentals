@@ -213,15 +213,18 @@ async function loadEmployeeData(){
 }
 if(!window.goTabAuthOptions||!window.supabase?.createClient){say('Connection library failed to load. Refresh the page.');return}
 const client=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW',{auth:window.goTabAuthOptions});
-const show=user=>{
+const show=async user=>{
  if(!user){window.location.replace('/');return}
  if(user.id===OWNER){window.location.replace('/');return}
+ const {data:workspace,error:workspaceError}=await client.rpc('go_workspace_access');
+ if(workspaceError){say(workspaceError.message);return}
+ if(workspace?.owner_id){window.location.replace('/');return}
  auth.classList.add('hidden');report.classList.remove('hidden');
  say('Signed in. Loading your available vehicles and rentals…');
  loadEmployeeData();void loadEmployeeDeletedRentals();
 };
-client.auth.getUser().then(({data,error})=>{if(error)say(error.message);else show(data.user)}).catch(e=>say(e.message));
-document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Signing in…');const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)say(error.message);else{const {data}=await client.auth.getUser();show(data.user)}};
+client.auth.getUser().then(({data,error})=>{if(error)say(error.message);else return show(data.user)}).catch(e=>say(e.message));
+document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Signing in…');const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)say(error.message);else{const {data}=await client.auth.getUser();await show(data.user)}};
 document.querySelector('#signup').onclick=async()=>{say('Creating account…');const {error}=await client.auth.signUp({email:email.value.trim(),password:password.value});say(error?error.message:'Registration sent. Verify your email, then ask the owner to authorize your account.')};
 document.querySelector('#signout').onclick=async()=>{await client.auth.signOut();window.location.replace('/')};
 document.querySelector('#rental').onsubmit=async e=>{

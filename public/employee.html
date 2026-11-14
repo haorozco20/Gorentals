@@ -2,31 +2,34 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GO Rentals — Employee Rental Reports</title>
 <meta name="theme-color" content="#465fff"><link rel="stylesheet" href="/theme.css"></head>
-<body><main><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h1>GO Rentals</h1><p>Employee rental entry / Registro de alquiler</p></div><div style="min-width:125px"><label id="langLabel" for="portalLang">Idioma</label><select id="portalLang" aria-label="Idioma / Language"><option value="es">Español</option><option value="en">English</option></select></div></div>
+<body class="employee-portal"><main><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div><h1>GO Rentals</h1><p>Employee rental entry / Registro de alquiler</p></div><div style="min-width:125px"><label id="langLabel" for="portalLang">Idioma</label><select id="portalLang" aria-label="Idioma / Language"><option value="es">Español</option><option value="en">English</option></select></div></div>
 <section id="auth"><h2>Employee sign in</h2><form id="login"><label>Email<input id="email" type="email" required autocomplete="email"></label><label>Password<input id="password" type="password" required minlength="8" autocomplete="current-password"></label><button type="submit">Sign in</button><button class="alt" type="button" id="signup">Create employee account</button></form><p class="muted">After registering, verify your email. The owner must approve your account before you can send reports.</p></section>
-<section id="report" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>New rental</h2><button class="alt" id="signout" type="button">Sign out</button></div><p>Create a rental directly in GO Rentals. You can edit rentals you submitted below.</p>
-<form id="rental">
-<label>Vehicle / Vehículo<select id="vehicle" name="vehicle_plate" required><option value="">Loading vehicles…</option></select></label><label>License plate / Placa<input id="plate" readonly placeholder="Selected automatically"></label>
-<label>Customer name / Nombre<input name="customer_name" required minlength="2" maxlength="140"></label>
-<div class="grid"><div><label>Country code</label><select id="code" name="phone_country_code"><option value="+505">🇳🇮 Nicaragua +505</option><option value="+1">🇺🇸 USA +1</option></select></div><div><label>Customer phone / Teléfono</label><input name="phone_local" type="tel" maxlength="30" placeholder="8888 8888"></div></div>
-<label>Customer email / Correo<input name="customer_email" type="email" maxlength="254"></label>
-<div class="grid"><div><label>Pickup / Entrega<input name="pickup" type="date" required></label></div><div><label>Pickup time / Hora de entrega<input name="pickup_time" type="time" value="09:00" required></label></div><div><label>Return / Devolución<input name="dropoff" type="date" required></label></div><div><label>Return time / Hora de devolución<input name="dropoff_time" type="time" value="17:00" required></label></div></div>
-<div class="grid"><div><label>Daily rate (USD) — fills automatically, editable<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Gas level / Nivel de combustible<select name="gas_level" required><option value="">Select gas level / Seleccionar nivel</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="3/4">3/4</option><option value="FULL">FULL / Lleno</option></select></label></div></div>
-<label>Payment method / Método de pago<select name="payment_method"><option value="">Select method / Seleccionar método</option><option value="cash">Cash / Efectivo</option><option value="bank_transfer">Bank Transfer / Transferencia bancaria</option><option value="credit_card">Credit Card / Tarjeta de crédito</option></select></label>
-<label>Add Pictures / Agregar fotos (optional)<input id="rentalPhotos" type="file" accept="image/*,.heic,.heif" multiple><span class="muted">Up to 6 photos, 10 MB each. Take pictures before handing over the vehicle.</span></label><div id="photoSelection" class="muted"></div>
-<label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
-<label id="paymentCurrencyLabel">Moneda de cobro<select id="paymentCurrency" name="payment_currency"><option value="USD">USD — US dollars</option><option value="NIO">NIO — Córdobas</option></select></label><label id="exchangeRateField" class="hidden"><span id="exchangeRateLabel">Tipo de cambio: C$ por US$1</span><input id="exchangeRate" name="payment_exchange_rate" type="number" min="0.000001" step="any"></label>
-<label id="paidFullLabel" for="paidFull">¿Pagó completo?</label><select id="paidFull" name="paid_in_full" required><option value="">Selecciona una opción</option><option value="yes">Sí, pagó completo</option><option value="no">No, pago parcial o pendiente</option></select>
-<label id="amountPaidField" class="hidden"><span id="amountPaidLabel">Monto recibido (USD)</span><input id="amountPaid" name="paid" type="number" min="0" step="0.01"></label>
-<div id="rentalTotalBox" class="rental-total" role="status" aria-live="polite"><div><strong id="rentalTotalLabel">Total del alquiler</strong><div id="rentalTotalDetails"></div></div><output id="rentalTotalAmount">—</output></div>
-<div class="rental-payment-summary" aria-live="polite"><div><span id="paidSummaryLabel">Monto recibido</span><strong id="paidSummaryAmount">—</strong></div><div><span id="balanceSummaryLabel">Saldo pendiente</span><strong id="balanceSummaryAmount">—</strong></div><p id="paymentValidation" class="warning" role="status"></p></div>
-<button id="send" type="submit">Save rental</button><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button><button id="deleteRental" type="button" class="danger hidden">Delete rental</button></form><div class="rental-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">
- <button type="button" id="activeRentalTab" class="tab-selected">Mis alquileres / My Rentals</button>
- <button type="button" id="deletedRentalTab" class="alt">Eliminados / Deleted Rentals</button></div>
- <div id="activeRentalPanel"><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></div>
+<section id="report" class="hidden"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>Employee portal</h2><button class="alt" id="signout" type="button">Sign out</button></div><p>Create a rental directly in GO Rentals. You can edit rentals you submitted below.</p>
+<div class="employee-nav" role="group" aria-label="Rental sections"><button id="newRentalTab" type="button" class="tab-selected">New rental</button><button id="activeRentalTab" type="button" class="alt">My rentals</button><button id="deletedRentalTab" type="button" class="alt">Deleted Rentals</button></div>
+<div id="employee-entry-panel">
+<form id="rental" novalidate>
+<ol class="employee-steps" aria-label="Rental progress"><li data-step="1" aria-current="step"><span>1</span><b>Vehicle & customer</b></li><li data-step="2"><span>2</span><b>Dates & rate</b></li><li data-step="3"><span>3</span><b>Payment</b></li></ol>
+<fieldset data-rental-step="1"><legend>Who’s renting?</legend><p class="help">Choose the vehicle and add the customer’s contact details.</p><label>Vehicle<select id="vehicle" name="vehicle_plate" required><option value="">Loading vehicles…</option></select></label><input id="plate" readonly hidden aria-label="License plate">
+<div class="grid"><label>Customer name<input name="customer_name" required minlength="2" maxlength="140" autocomplete="name"></label><div><label>Phone number</label><div class="employee-phone"><select id="code" name="phone_country_code" aria-label="Country code"><option value="+505">🇳🇮 +505</option><option value="+1">🇺🇸 +1</option></select><input name="phone_local" type="tel" maxlength="30" autocomplete="tel-national" aria-label="Phone number"></div></div></div>
+<label>Customer email <span class="muted">(optional)</span><input name="customer_email" type="email" maxlength="254" autocomplete="email"></label>
+</fieldset>
+<fieldset data-rental-step="2" hidden><legend>When is the rental?</legend><p class="help">The daily rate fills automatically. You can adjust it if needed.</p><div class="grid"><label>Pickup date<input name="pickup" type="date" required></label><label>Pickup time<input name="pickup_time" type="time" value="09:00" required></label><label>Return date<input name="dropoff" type="date" required></label><label>Return time<input name="dropoff_time" type="time" value="17:00" required></label><label>Daily rate · USD<input name="rate" type="number" min="0" max="100000" step="0.01" required></label><label>Fuel at pickup<select name="gas_level" required><option value="">Select gas level</option><option value="FULL">Full tank</option><option value="3/4">3/4</option><option value="1/2">1/2</option><option value="1/4">1/4</option></select></label></div><p id="employee-availability" class="help" role="status" aria-live="polite"></p></fieldset>
+<fieldset data-rental-step="3" hidden><legend>Record the payment</legend><p id="employee-rental-review" class="help" translate="no"></p>
+<label id="paidFullLabel" for="paidFull">Paid in full?</label><select id="paidFull" name="paid_in_full" required><option value="yes" selected>Yes, paid in full</option><option value="no">No, partially paid or unpaid</option></select>
+<div class="grid"><label id="paymentCurrencyLabel">Collected currency<select id="paymentCurrency" name="payment_currency"><option value="USD">USD — US dollars</option><option value="NIO">NIO — Córdobas</option></select></label><label>Payment method<select name="payment_method"><option value="cash">Cash</option><option value="bank_transfer">Bank transfer</option><option value="credit_card">Credit card</option></select></label><label id="amountPaidField" class="hidden"><span id="amountPaidLabel">Amount received (USD)</span><input id="amountPaid" name="paid" type="number" min="0" step="0.01"></label><label id="exchangeRateField" class="hidden"><span id="exchangeRateLabel">Exchange rate: C$ per US$1</span><input id="exchangeRate" name="payment_exchange_rate" type="number" min="0.000001" step="any"></label></div>
+<div class="rental-payment-summary" aria-live="polite"><div><span id="paidSummaryLabel">Amount received (USD)</span><strong id="paidSummaryAmount">—</strong></div><div id="employee-nio-row" hidden><span>Collected in córdobas</span><strong id="employee-nio-amount">—</strong></div><div><span id="balanceSummaryLabel">Balance due (USD)</span><strong id="balanceSummaryAmount">—</strong></div><p id="paymentValidation" class="warning" role="status"></p></div>
+<details class="employee-additional"><summary>Additional details · optional</summary><label>Add Pictures / Agregar fotos (optional)<input id="rentalPhotos" type="file" accept="image/*,.heic,.heif" multiple><span class="muted">Up to 6 photos, 10 MB each. Take pictures before handing over the vehicle.</span></label><div id="photoSelection" class="muted"></div><label>Notes<textarea name="notes" maxlength="2000"></textarea></label></details>
+</fieldset>
+<p id="employee-step-error" class="warning" role="alert" hidden></p><p id="employee-adjustments" class="help" hidden></p>
+<div class="employee-form-footer"><div id="rentalTotalBox" class="rental-total" role="status" aria-live="polite"><div><strong id="rentalTotalLabel">Rental total</strong><div id="rentalTotalDetails"></div></div><output id="rentalTotalAmount">—</output></div><div class="employee-step-actions"><button id="employee-step-back" type="button" class="alt" hidden>Back</button><button id="employee-step-next" type="button">Continue →</button><button id="send" type="submit" hidden>Save rental</button></div></div>
+<div class="employee-edit-actions"><button id="cancelEdit" type="button" class="alt hidden">Cancel editing</button><button id="deleteRental" type="button" class="danger hidden">Delete rental</button></div>
+</form></div>
+
+<div id="employee-success-panel" hidden><div class="employee-success-mark" aria-hidden="true">✓</div><h2>Rental saved</h2><p>Your rental is saved in GO Rentals.</p><div class="employee-success-actions"><button type="button" id="employee-another">New rental</button><button type="button" class="alt" id="employee-view-rentals">My rentals</button></div></div>
+<div id="activeRentalPanel" hidden><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></div>
  <div id="deletedRentalPanel" class="hidden"><h2 id="deletedHeading">Alquileres eliminados</h2><p id="deletedHelp" class="muted">Historial de los alquileres que eliminaste. No aparecen en los alquileres activos.</p><div id="deletedRentalsList"></div></div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="/go-auth-session.js"></script><script src="/go-ui.js"></script><script src="/go-recovery.js"></script><script src="/go-time.js"></script><script src="/go-drafts.js"></script><script src="/go-currency.js"></script><script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="/go-auth-session.js"></script><script src="/go-ui.js"></script><script src="/go-recovery.js"></script><script src="/go-time.js"></script><script src="/go-drafts.js"></script><script src="/go-currency.js"></script><script src="/go-employee-flow.js"></script><script>
 (()=>{'use strict';const formatTime=value=>window.GoTime.format(value);
 const OWNER='98eed9ac-b4c6-4c66-8298-923c85d49b94';
 const status=document.querySelector('#status'),auth=document.querySelector('#auth'),report=document.querySelector('#report');
@@ -61,20 +64,23 @@ function localize(){
  document.querySelector('#activeRentalPanel').classList.toggle('hidden',showDeleted);
  document.querySelector('#deletedRentalPanel').classList.toggle('hidden',!showDeleted);
  for(const item of root.querySelectorAll('[data-delete-entry]'))item.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
+ flow?.render();
 }
 document.querySelector('#portalLang').onchange=e=>{language=e.target.value;localStorage.setItem('go_employee_language',language);localize()};
 const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=window.GoUI.text(message);status.classList.toggle('warning',/incorrect|demasiadas|expired|vencido|failed|could not|not saved|unavailable|denied|permission|approval|required|exceed|invalid|must be|please sign in|choose a|enter the|no se pudo|no se guardó|no disponible|permiso|aprobación|debe|supera|ingresa|selecciona|vuelve a iniciar/i.test(message))};
 const say=localizedSay;
+let flow=null;
 let editing=null,vehicles=[],myRentals=[],myDeletedRentals=[];let showDeleted=false;
 let employeePermissions={active:true,create:true,edit:true,delete:true,photos:true};
 function applyEmployeePermissions(){
  const form=document.querySelector('#rental');
- const canSave=editing?employeePermissions.edit:employeePermissions.create;
+ const canSave=employeePermissions.active&&(editing?employeePermissions.edit:employeePermissions.create);
  form.classList.toggle('hidden',!canSave);
  document.querySelector('#send').disabled=!canSave||!vehicles.length;
  document.querySelector('#deleteRental').classList.toggle('hidden',!editing||!employeePermissions.delete);
  photoInput.closest('label').classList.toggle('hidden',!employeePermissions.photos);
  document.querySelector('#photoSelection').classList.toggle('hidden',!employeePermissions.photos);
+ flow?.render();
 }
 const vehicleSelect=document.querySelector('#vehicle'),plate=document.querySelector('#plate'),rentalForm=document.querySelector('#rental');
 
@@ -89,7 +95,13 @@ function updateRentalTotal(){
  const money=n=>new Intl.NumberFormat(language==='es'?'es-NI':'en-US',{style:'currency',currency:'USD'}).format(n);
  document.querySelector('#rentalTotalAmount').textContent=valid?money(days*amount):'—';
  document.querySelector('#rentalTotalDetails').textContent=valid?days+(language==='es'?(days===1?' día':' días'):(days===1?' day':' days'))+' × '+money(amount):language==='es'?'Completa fechas, horas y precio diario.':'Enter dates, times, and daily rate.';
- updateRentalPayment(valid?Math.round(days*amount*100)/100:null);
+ const adjustments=editing?myRentals.find(item=>item.id===editing)||{}:{};
+ const total=valid?window.GoRentalFlow.charge(pickup,dropoff,amount,adjustments):null;
+ document.querySelector('#rentalTotalAmount').textContent=valid?money(total):'—';
+ const adjustmentNote=document.querySelector('#employee-adjustments');
+ adjustmentNote.hidden=!valid||!(Number(adjustments.discount)||Number(adjustments.extras));
+ adjustmentNote.textContent=language==='es'?'El total incluye los descuentos y cargos adicionales registrados por el propietario.':'Total includes discounts and extra charges recorded by the owner.';
+ updateRentalPayment(total);
 }
 
 function rentalPaymentValues(total,choice,rawPaid,currency="USD",rate=1){
@@ -109,7 +121,7 @@ function updateRentalPayment(total){
  document.querySelector('#exchangeRateField').classList.toggle('hidden',currency!=='NIO');rateField.required=currency==='NIO';
  document.querySelector('#exchangeRateLabel').textContent=es?'Tipo de cambio: C$ por US$1':'Exchange rate: C$ per US$1';
  document.querySelector('#paidFullLabel').textContent=es?'¿Pagó completo?':'Paid in full?';
- const labels=es?['Selecciona una opción','Sí, pagó completo','No, pago parcial o pendiente']:['Select an option','Yes, paid in full','No, partially paid or unpaid'];
+ const labels=es?['Sí, pagó completo','No, pago parcial o pendiente']:['Yes, paid in full','No, partially paid or unpaid'];
  [...choice.options].forEach((option,index)=>option.textContent=labels[index]);
  document.querySelector('#amountPaidLabel').textContent=(es?'Monto recibido (':'Amount received (')+currency+')';
  const partial=choice.value==='no';document.querySelector('#amountPaidField').classList.toggle('hidden',!partial);paid.required=partial;
@@ -121,13 +133,15 @@ function updateRentalPayment(total){
  document.querySelector('#balanceSummaryLabel').textContent=es?'Saldo pendiente (USD)':'Balance due (USD)';
  document.querySelector('#paidSummaryAmount').textContent=result?money(result.paid):'—';
  document.querySelector('#balanceSummaryAmount').textContent=result?money(result.balance):'—';
+ document.querySelector('#employee-nio-row').hidden=currency!=='NIO';
+ document.querySelector('#employee-nio-amount').textContent=result?'C$'+Number(result.paymentOriginalAmount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'—';
  document.querySelector('#balanceSummaryAmount').classList.toggle('unpaid-balance',Boolean(result&&result.balance>0));
  document.querySelector('#paymentValidation').textContent=partial&&paid.value!==''&&total!==null&&!result?(es?'El pago debe estar entre cero y el total del alquiler.':'Payment must be between zero and the rental total.'):'';
 }
 
 rentalForm.addEventListener('input',updateRentalTotal);
 rentalForm.addEventListener('change',updateRentalTotal);
-window.GoDraft.bind(rentalForm,'employee-rental',{get rentalId(){return editing}});
+window.GoDraft.bind(rentalForm,'employee-rental',{get rentalId(){return editing},get step(){return flow?.step||1}});
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 vehicleSelect.onchange=()=>{
  plate.value=vehicleSelect.value;
@@ -135,7 +149,7 @@ vehicleSelect.onchange=()=>{
  const rateField=rentalForm.elements.namedItem('rate');
  if(!editing){rateField.value=selected?.daily_rate??''}updateRentalTotal();
 };
-const clearEdit=()=>{window.GoDraft.clear('employee-rental');editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent='';applyEmployeePermissions();updateRentalTotal()};
+const clearEdit=()=>{window.GoDraft.clear('employee-rental');editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent='';applyEmployeePermissions();updateRentalTotal();flow?.reset()};
 const photoInput=document.querySelector('#rentalPhotos');
 photoInput.onchange=()=>{const files=[...photoInput.files];document.querySelector('#photoSelection').textContent=files.length?files.length+' picture(s) selected: '+files.map(f=>f.name).join(', '):''};
 const photoExtensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','image/heif':'heif'};
@@ -152,6 +166,7 @@ async function uploadRentalPhotos(rentalId,files){
   const {error}=await client.storage.from('go-rental-photos').upload(path,file,{contentType,upsert:false});
   if(error)throw Error('Photo '+(count+1)+': '+error.message);
   count++;
+  const remaining=new DataTransfer();for(const candidate of photoInput.files)if(candidate!==file)remaining.items.add(candidate);photoInput.files=remaining.files;photoInput.dispatchEvent(new Event('change',{bubbles:true}));
  }
  return count;
 }
@@ -240,9 +255,9 @@ async function loadEmployeeData(){
    const ph=String(item.customer_phone||'');document.querySelector('#code').value=ph.startsWith('+1 ')?'+1':'+505';
    set('phone_local',ph.replace(/^\+(?:505|1)\s*/,''));set('customer_email',item.customer_email);
    set('pickup',item.pickup);set('pickup_time',item.pickup_time||'09:00');set('dropoff',item.dropoff);set('dropoff_time',item.dropoff_time||'17:00');set('rate',item.rate);set('gas_level',item.gas_level||'');set('payment_method',item.payment_method||'');set('notes',item.notes);
-   set('payment_currency',item.payment_currency||'USD');set('payment_exchange_rate',item.payment_exchange_rate||'');set('paid',item.payment_currency==='NIO'?item.payment_original_amount??0:item.paid??0);const total=Math.max(1,Math.round((Date.parse(item.dropoff+'T00:00:00Z')-Date.parse(item.pickup+'T00:00:00Z'))/86400000))*Number(item.rate||0);set('paid_in_full',Number(item.paid||0)>=total?'yes':'no');
+   set('payment_currency',item.payment_currency||'USD');set('payment_exchange_rate',item.payment_exchange_rate||'');set('paid',item.payment_currency==='NIO'?item.payment_original_amount??0:item.paid??0);const total=window.GoRentalFlow.charge(item.pickup,item.dropoff,item.rate,item);set('paid_in_full',Number(item.paid||0)>=total?'yes':'no');
    document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');document.querySelector('#deleteRental').classList.toggle('hidden',!employeePermissions.delete);applyEmployeePermissions();
-   localize();
+   localize();flow?.startEditing();
    window.scrollTo({top:document.querySelector('#report').offsetTop,behavior:'smooth'});
   };
   const del=document.createElement('button');del.type='button';del.className='danger';del.dataset.deleteEntry='true';
@@ -251,7 +266,7 @@ async function loadEmployeeData(){
   del.classList.toggle('hidden',!employeePermissions.delete);
   del.onclick=()=>{void deleteEmployeeRental(item.id,del)};
   const payment=document.createElement('div');payment.className='help';
-  const total=Math.round(Math.max(1,Math.round((Date.parse(item.dropoff+'T00:00:00Z')-Date.parse(item.pickup+'T00:00:00Z'))/86400000))*Number(item.rate||0)*100)/100;
+  const total=window.GoRentalFlow.charge(item.pickup,item.dropoff,item.rate,item);
   const paid=Number(item.paid||0),balance=Math.round(Math.max(0,total-paid)*100)/100;
   const money=n=>new Intl.NumberFormat(language==='es'?'es-NI':'en-US',{style:'currency',currency:'USD'}).format(n);
   payment.textContent=(language==='es'?'Pagado: ':'Paid: ')+money(paid)+(language==='es'?' · Saldo pendiente: ':' · Balance due: ')+money(balance);if(item.payment_currency==='NIO')payment.textContent+=' · '+window.GoCurrency.describe({paymentCurrency:item.payment_currency,paymentOriginalAmount:item.payment_original_amount,paymentExchangeRate:item.payment_exchange_rate},language==='es');
@@ -263,6 +278,7 @@ async function loadEmployeeData(){
 if(!window.goTabAuthOptions||!window.supabase?.createClient){say('Connection library failed to load. Refresh the page.');return}
 const client=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW',{auth:window.goTabAuthOptions});
 window.GoRecovery.mount(client);
+flow=window.GoRentalFlow.mount({client,form:rentalForm,getEditing:()=>editing,getPermissions:()=>employeePermissions,getLanguage:()=>language,getRentals:()=>myRentals,onHistory:deleted=>{showDeleted=deleted}});
 const show=async user=>{
  if(window.GoRecovery.active)return;
  if(!user){auth.classList.remove('hidden');report.classList.add('hidden');say('Sign in with your employee account.');return}
@@ -273,7 +289,7 @@ const show=async user=>{
  auth.classList.add('hidden');report.classList.remove('hidden');
  say('Signed in. Loading your available vehicles and rentals…');
  window.GoDraft.setUser(user.id);
- await loadEmployeeData();void loadEmployeeDeletedRentals();
+ await loadEmployeeData();flow.reset();void loadEmployeeDeletedRentals();
  const draft=window.GoDraft.read('employee-rental');
  if(draft&&employeePermissions.active){
   const id=draft.metadata?.rentalId;
@@ -281,7 +297,7 @@ const show=async user=>{
    editing=id||null;window.GoDraft.restore(rentalForm,draft);plate.value=vehicleSelect.value;
    document.querySelector('#send').textContent=editing?'Save changes':'Save rental';
    document.querySelector('#cancelEdit').classList.toggle('hidden',!editing);
-   applyEmployeePermissions();updateRentalTotal();localize();
+   applyEmployeePermissions();updateRentalTotal();localize();flow.restore(draft);
    say(language==='es'?'Formulario sin terminar recuperado. Revisa los datos antes de guardar.':'Unfinished form restored. Review the details before saving.');
   }else window.GoDraft.clear('employee-rental');
  }
@@ -303,7 +319,7 @@ const selectedPlate=String(fd.get('vehicle_plate')||'').trim();
 if(!vehicles.some(v=>v.plate===selectedPlate)){say('Choose a valid vehicle from the list.');return}
 if(rate===''){say('Enter the daily rate to save the rental.');return}
 if(!['1/4','1/2','3/4','FULL'].includes(gasLevel)){say('Choose the gas level.');return}
-const total=Math.round(Math.max(1,Math.round((Date.parse(dropoff+'T00:00:00Z')-Date.parse(pickup+'T00:00:00Z'))/86400000))*Number(rate)*100)/100;
+const total=window.GoRentalFlow.charge(pickup,dropoff,rate,editing?myRentals.find(item=>item.id===editing)||{}:{});
 const payment=rentalPaymentValues(total,String(fd.get('paid_in_full')||''),String(fd.get('paid')||''),String(fd.get('payment_currency')||'USD'),String(fd.get('payment_exchange_rate')||''));
 if(!payment){say(language==='es'?'Indica si pagó completo e ingresa un monto recibido válido.':'Choose whether paid in full and enter a valid amount received.');return}
 const payload={payment_currency:payment.paymentCurrency,payment_original_amount:payment.paymentOriginalAmount,payment_exchange_rate:payment.paymentExchangeRate,paid:payment.paid,paid_in_full:payment.paidInFull,vehicle_plate:selectedPlate,customer_name:String(fd.get('customer_name')).trim(),customer_phone:phone?document.querySelector('#code').value+' '+phone:'',customer_email:String(fd.get('customer_email')||'').trim(),pickup,dropoff,pickup_time:pickupTime,dropoff_time:dropoffTime,rate:Number(rate),gas_level:gasLevel,payment_method:String(fd.get('payment_method')||''),notes:String(fd.get('notes')||'').trim()};
@@ -317,7 +333,7 @@ try{
  if(error)throw error;
  rentalSaved=true;editing=rentalId;
  const count=await uploadRentalPhotos(rentalId,pictures);
- clearEdit();await loadEmployeeData();
+ clearEdit();await loadEmployeeData();flow?.saved();
  say('Rental saved to owner Rentals tab'+(count?' with '+count+' picture(s)':'')+' successfully.');
 }catch(err){say(rentalSaved?'Rental was saved, but pictures could not be fully uploaded: '+err.message+'. Keep this form open and retry using Save changes (do not create a new rental).':'Rental not saved: '+err.message);
  if(rentalSaved){rentalForm.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');applyEmployeePermissions()}

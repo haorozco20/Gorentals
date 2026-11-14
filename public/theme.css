@@ -383,3 +383,16 @@ body>main #auth{max-width:520px;margin:40px auto}
 .employee-profile-card .tag{align-self:flex-start;white-space:normal}
 .employee-profiles-modal .fields label input{margin-top:6px}
 @media(prefers-color-scheme:dark){.employee-profile-card{background:#202d40;color:#f8fafc;border-color:#455469}.employee-profile-card>span,.employee-profile-card>small{color:#bdc8d9}}
+
+.expense-category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px;margin-top:18px}
+.expense-category-card{display:flex;flex-direction:column;gap:12px;padding:18px;border:1px solid #e4e7ec;border-radius:12px;background:#fff;color:#344054;text-align:left;min-width:0}
+.expense-category-card:hover{border-color:#8090ff;background:#f9fafb}
+.expense-category-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;font-size:14px}
+.expense-category-heading strong{overflow-wrap:anywhere}
+.expense-category-amount{font-size:25px;font-weight:600;color:#101828}
+.expense-category-card small{color:#667085}
+.expense-category-total{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;margin-bottom:14px;border-bottom:1px solid #e4e7ec}
+.expense-category-total strong{font-size:24px}
+@media(prefers-color-scheme:dark){.expense-category-card{background:#202d40;border-color:#455469;color:#f8fafc}.expense-category-card:hover{background:#27384d;border-color:#a5b4fc}.expense-category-amount{color:#f8fafc}.expense-category-card small{color:#bdc8d9}.expense-category-total{border-color:#455469}}
+@media(max-width:560px){.expense-category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.expense-category-card{padding:14px;gap:10px}.expense-category-amount{font-size:22px}}
+@media(max-width:360px){.expense-category-grid{grid-template-columns:1fr}}

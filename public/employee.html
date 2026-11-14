@@ -11,7 +11,7 @@
 <div class="grid"><div><label>Country code</label><select id="code" name="phone_country_code"><option value="+505">🇳🇮 Nicaragua +505</option><option value="+1">🇺🇸 USA +1</option></select></div><div><label>Customer phone / Teléfono</label><input name="phone_local" type="tel" maxlength="30" placeholder="8888 8888"></div></div>
 <label>Customer email / Correo<input name="customer_email" type="email" maxlength="254"></label>
 <div class="grid"><div><label>Pickup / Entrega<input name="pickup" type="date" required></label></div><div><label>Pickup time / Hora de entrega<input name="pickup_time" type="time" value="09:00" required></label></div><div><label>Return / Devolución<input name="dropoff" type="date" required></label></div><div><label>Return time / Hora de devolución<input name="dropoff_time" type="time" value="17:00" required></label></div></div>
-<div class="grid"><div><label>Daily rate / Tarifa diaria — auto-fill, editable</label><div style="display:flex;gap:8px;min-width:0;align-items:stretch"><input aria-label="Daily rate / Tarifa diaria" name="rate" type="number" min="0" max="10000000" step="0.01" style="width:0;min-width:0;flex:1 1 auto;font-size:16px"><select aria-label="Currency / Moneda" name="rate_currency" id="rateCurrency" style="width:110px;min-width:0;max-width:110px;flex:0 0 110px;font-size:13px;padding:8px 3px"><option value="USD">USD — $</option><option value="NIO">NIO — C$</option></select></div><label id="rateExchangeField" class="hidden">Exchange rate / Tipo de cambio C$ por US$1<input id="rateExchange" name="rate_exchange" type="number" min="0.000001" step="any"></label></div><div><label>Gas level / Nivel de combustible<select name="gas_level" required><option value="">Select gas level / Seleccionar nivel</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="3/4">3/4</option><option value="FULL">FULL / Lleno</option></select></label></div></div>
+<div class="grid"><div><label>Daily rate (USD) — fills automatically, editable<input name="rate" type="number" min="0" max="100000" step="0.01"></div><div><label>Gas level / Nivel de combustible<select name="gas_level" required><option value="">Select gas level / Seleccionar nivel</option><option value="1/4">1/4</option><option value="1/2">1/2</option><option value="3/4">3/4</option><option value="FULL">FULL / Lleno</option></select></label></div></div>
 <label>Payment method / Método de pago<select name="payment_method"><option value="">Select method / Seleccionar método</option><option value="cash">Cash / Efectivo</option><option value="bank_transfer">Bank Transfer / Transferencia bancaria</option><option value="credit_card">Credit Card / Tarjeta de crédito</option></select></label>
 <label>Add Pictures / Agregar fotos (optional)<input id="rentalPhotos" type="file" accept="image/*,.heic,.heif" multiple><span class="muted">Up to 6 photos, 10 MB each. Take pictures before handing over the vehicle.</span></label><div id="photoSelection" class="muted"></div>
 <label>Notes / Notas<textarea name="notes" maxlength="2000" placeholder="Additional details for the owner"></textarea></label>
@@ -26,7 +26,7 @@
  <div id="activeRentalPanel"><h2>My submitted rentals</h2><p class="muted">You can edit rentals you personally entered. Other business records stay private.</p><div id="myrentals">Sign in to see your rentals.</div></div>
  <div id="deletedRentalPanel" class="hidden"><h2 id="deletedHeading">Alquileres eliminados</h2><p id="deletedHelp" class="muted">Historial de los alquileres que eliminaste. No aparecen en los alquileres activos.</p><div id="deletedRentalsList"></div></div></section>
 <p id="status" class="status">Checking secure connection…</p></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="/go-auth-session.js"></script><script src="/go-time.js"></script><script src="/go-drafts.js"></script><script src="/go-currency.js"></script><script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="/go-auth-session.js"></script><script src="/go-ui.js"></script><script src="/go-recovery.js"></script><script src="/go-time.js"></script><script src="/go-drafts.js"></script><script src="/go-currency.js"></script><script>
 (()=>{'use strict';const formatTime=value=>window.GoTime.format(value);
 const OWNER='98eed9ac-b4c6-4c66-8298-923c85d49b94';
 const status=document.querySelector('#status'),auth=document.querySelector('#auth'),report=document.querySelector('#report');
@@ -35,6 +35,7 @@ const esEn=Object.fromEntries(Object.entries(enEs).map(([en,es])=>[es,en]));
 let language=localStorage.getItem('go_employee_language')==='en'?'en':'es';
 const tx=(value)=>String(value??'').split(/(?<=: )|(?= successfully\.)/).map(part=>language==='es'?(enEs[part]||part):(esEn[part]||part)).join('');
 function localize(){
+ window.GoUI.setLanguage(language);
  updateRentalTotal();
  document.documentElement.lang=language;
  document.querySelector('#portalLang').value=language;
@@ -62,7 +63,7 @@ function localize(){
  for(const item of root.querySelectorAll('[data-delete-entry]'))item.textContent=language==='es'?'Eliminar alquiler':'Delete rental';
 }
 document.querySelector('#portalLang').onchange=e=>{language=e.target.value;localStorage.setItem('go_employee_language',language);localize()};
-const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=message;status.classList.toggle('warning',/failed|could not|not saved|unavailable|denied|permission|approval|required|exceed|invalid|must be|please sign in|choose a|enter the|no se pudo|no se guardó|no disponible|permiso|aprobación|debe|supera|ingresa|selecciona|vuelve a iniciar/i.test(message))};
+const localizedSay=value=>{let message=String(value??'');if(language==='es')for(const [en,es] of Object.entries(enEs)){if(message.includes(en))message=message.replaceAll(en,es)}status.textContent=window.GoUI.text(message);status.classList.toggle('warning',/incorrect|demasiadas|expired|vencido|failed|could not|not saved|unavailable|denied|permission|approval|required|exceed|invalid|must be|please sign in|choose a|enter the|no se pudo|no se guardó|no disponible|permiso|aprobación|debe|supera|ingresa|selecciona|vuelve a iniciar/i.test(message))};
 const say=localizedSay;
 let editing=null,vehicles=[],myRentals=[],myDeletedRentals=[];let showDeleted=false;
 let employeePermissions={active:true,create:true,edit:true,delete:true,photos:true};
@@ -77,12 +78,11 @@ function applyEmployeePermissions(){
 }
 const vehicleSelect=document.querySelector('#vehicle'),plate=document.querySelector('#plate'),rentalForm=document.querySelector('#rental');
 
-function employeeRateUSD(){const form=document.querySelector('#rental');const raw=form.elements.namedItem('rate').value;const currency=form.elements.namedItem('rate_currency').value;const exchange=form.elements.namedItem('rate_exchange').value;document.querySelector('#rateExchangeField').classList.toggle('hidden',currency!=='NIO');form.elements.namedItem('rate_exchange').required=currency==='NIO';if(raw==='')return null;const value=Number(raw),fx=currency==='NIO'?Number(exchange):1;return Number.isFinite(value)&&value>=0&&Number.isFinite(fx)&&fx>0?Math.round(value/fx*100)/100:null}
 function updateRentalTotal(){
  const value=name=>rentalForm.elements.namedItem(name).value;
  const pickup=value('pickup'),dropoff=value('dropoff'),rate=value('rate');
  const start=Date.parse(pickup+'T00:00:00Z'),end=Date.parse(dropoff+'T00:00:00Z');
- const amount=employeeRateUSD(),pickupTime=value('pickup_time'),dropoffTime=value('dropoff_time');
+ const amount=Number(rate),pickupTime=value('pickup_time'),dropoffTime=value('dropoff_time');
  const valid=Number.isFinite(start)&&Number.isFinite(end)&&rate!==''&&Number.isFinite(amount)&&amount>=0&&amount<=100000&&pickupTime&&dropoffTime&&(dropoff+'T'+dropoffTime)>(pickup+'T'+pickupTime);
  document.querySelector('#rentalTotalLabel').textContent=language==='es'?'Total del alquiler':'Rental total';
  const days=valid?Math.max(1,Math.round((end-start)/86400000)):0;
@@ -133,7 +133,7 @@ vehicleSelect.onchange=()=>{
  plate.value=vehicleSelect.value;
  const selected=vehicles.find(v=>v.plate===vehicleSelect.value);
  const rateField=rentalForm.elements.namedItem('rate');
- if(!editing){rentalForm.elements.namedItem('rate_currency').value='USD';rentalForm.elements.namedItem('rate_exchange').value='';rateField.value=selected?.daily_rate??''}updateRentalTotal();
+ if(!editing){rateField.value=selected?.daily_rate??''}updateRentalTotal();
 };
 const clearEdit=()=>{window.GoDraft.clear('employee-rental');editing=null;rentalForm.reset();plate.value='';document.querySelector('#send').textContent='Save rental';document.querySelector('#cancelEdit').classList.add('hidden');document.querySelector('#deleteRental').classList.add('hidden');document.querySelector('#photoSelection').textContent='';applyEmployeePermissions();updateRentalTotal()};
 const photoInput=document.querySelector('#rentalPhotos');
@@ -239,7 +239,7 @@ async function loadEmployeeData(){
    set('vehicle_plate',item.vehicle_plate);plate.value=item.vehicle_plate;set('customer_name',item.customer_name);
    const ph=String(item.customer_phone||'');document.querySelector('#code').value=ph.startsWith('+1 ')?'+1':'+505';
    set('phone_local',ph.replace(/^\+(?:505|1)\s*/,''));set('customer_email',item.customer_email);
-   set('pickup',item.pickup);set('pickup_time',item.pickup_time||'09:00');set('dropoff',item.dropoff);set('dropoff_time',item.dropoff_time||'17:00');set('rate',item.rate);set('rate_currency','USD');set('rate_exchange','');set('gas_level',item.gas_level||'');set('payment_method',item.payment_method||'');set('notes',item.notes);
+   set('pickup',item.pickup);set('pickup_time',item.pickup_time||'09:00');set('dropoff',item.dropoff);set('dropoff_time',item.dropoff_time||'17:00');set('rate',item.rate);set('gas_level',item.gas_level||'');set('payment_method',item.payment_method||'');set('notes',item.notes);
    set('payment_currency',item.payment_currency||'USD');set('payment_exchange_rate',item.payment_exchange_rate||'');set('paid',item.payment_currency==='NIO'?item.payment_original_amount??0:item.paid??0);const total=Math.max(1,Math.round((Date.parse(item.dropoff+'T00:00:00Z')-Date.parse(item.pickup+'T00:00:00Z'))/86400000))*Number(item.rate||0);set('paid_in_full',Number(item.paid||0)>=total?'yes':'no');
    document.querySelector('#send').textContent='Save changes';document.querySelector('#cancelEdit').classList.remove('hidden');document.querySelector('#deleteRental').classList.toggle('hidden',!employeePermissions.delete);applyEmployeePermissions();
    localize();
@@ -262,8 +262,10 @@ async function loadEmployeeData(){
 }
 if(!window.goTabAuthOptions||!window.supabase?.createClient){say('Connection library failed to load. Refresh the page.');return}
 const client=window.supabase.createClient('https://wfbwstaxrqkilmkzwbzz.supabase.co','sb_publishable_1oLbiBY7G4y_Ha54hPTMeg_SlWatlxW',{auth:window.goTabAuthOptions});
+window.GoRecovery.mount(client);
 const show=async user=>{
- if(!user){window.location.replace('/');return}
+ if(window.GoRecovery.active)return;
+ if(!user){auth.classList.remove('hidden');report.classList.add('hidden');say('Sign in with your employee account.');return}
  if(user.id===OWNER){window.location.replace('/');return}
  const {data:workspace,error:workspaceError}=await client.rpc('go_workspace_access');
  if(workspaceError){say(workspaceError.message);return}
@@ -285,21 +287,21 @@ const show=async user=>{
  }
 
 };
-client.auth.getUser().then(({data,error})=>{if(error)say(error.message);else return show(data.user)}).catch(e=>say(e.message));
-document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Signing in…');const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)say(error.message);else{const {data}=await client.auth.getUser();await show(data.user)}};
-document.querySelector('#signup').onclick=async()=>{say('Creating account…');const {error}=await client.auth.signUp({email:email.value.trim(),password:password.value});say(error?error.message:'Registration sent. Verify your email, then ask the owner to authorize your account.')};
+client.auth.getSession().then(({data,error})=>{if(error){say(error.message);return}return show(data.session?.user||null)}).catch(e=>say(e.message));
+document.querySelector('#login').onsubmit=async e=>{e.preventDefault();say('Signing in…');const {error}=await client.auth.signInWithPassword({email:email.value.trim(),password:password.value});if(error)say(window.GoUI.error(error));else{const {data}=await client.auth.getUser();await show(data.user)}};
+document.querySelector('#signup').onclick=async()=>{say('Creating account…');const {error}=await client.auth.signUp({email:email.value.trim(),password:password.value});say(error?window.GoUI.error(error):'Registration sent. Verify your email, then ask the owner to authorize your account.')};
 document.querySelector('#signout').onclick=async()=>{window.GoDraft.clearAll();await client.auth.signOut();window.location.replace('/')};
 document.querySelector('#rental').onsubmit=async e=>{
 e.preventDefault();if(!(editing?employeePermissions.edit:employeePermissions.create)){say(language==='es'?'No tienes permiso para guardar este alquiler.':'You do not have permission to save this rental.');return}const button=document.querySelector('#send'),fd=new FormData(e.currentTarget);
 const pickup=String(fd.get('pickup')),dropoff=String(fd.get('dropoff'));
 const pickupTime=String(fd.get('pickup_time')),dropoffTime=String(fd.get('dropoff_time'));
 if(!pickupTime||!dropoffTime||!/^([01]\d|2[0-3]):[0-5]\d$/.test(pickupTime)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(dropoffTime)||`${dropoff}T${dropoffTime}`<=`${pickup}T${pickupTime}`){say('Return must be after pickup.');return}
-const phone=String(fd.get('phone_local')||'').trim();const rate=employeeRateUSD(),gasLevel=String(fd.get('gas_level')||'');
+const phone=String(fd.get('phone_local')||'').trim();const rate=fd.get('rate'),gasLevel=String(fd.get('gas_level')||'');
 const {data:{user},error:userError}=await client.auth.getUser();
 if(userError||!user){say('Please sign in again.');return}
 const selectedPlate=String(fd.get('vehicle_plate')||'').trim();
 if(!vehicles.some(v=>v.plate===selectedPlate)){say('Choose a valid vehicle from the list.');return}
-if(rate===null){say(language==='es'?'Ingresa tarifa diaria y tipo de cambio válidos.':'Enter a valid daily rate and exchange rate.');return}
+if(rate===''){say('Enter the daily rate to save the rental.');return}
 if(!['1/4','1/2','3/4','FULL'].includes(gasLevel)){say('Choose the gas level.');return}
 const total=Math.round(Math.max(1,Math.round((Date.parse(dropoff+'T00:00:00Z')-Date.parse(pickup+'T00:00:00Z'))/86400000))*Number(rate)*100)/100;
 const payment=rentalPaymentValues(total,String(fd.get('paid_in_full')||''),String(fd.get('paid')||''),String(fd.get('payment_currency')||'USD'),String(fd.get('payment_exchange_rate')||''));

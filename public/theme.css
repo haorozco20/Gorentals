@@ -337,3 +337,19 @@ body>main #auth{max-width:520px;margin:40px auto}
 .customer-suggestion span:last-child{grid-column:2;grid-row:1 / span 2;align-self:center}
 .customer-suggestion:hover,.customer-suggestion:focus-visible{border-color:#8090ff;outline:2px solid #8090ff;outline-offset:1px}
 @media(prefers-color-scheme:dark){.customer-suggestion{background:#202d40;color:#f8fafc;border-color:#455469}.customer-suggestion span{color:#bdc8d9}}
+
+/* Small dismissible announcement and always-visible search. */
+.compact-announcement{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;margin-bottom:16px;font-size:12px;line-height:1.4}
+.compact-announcement .mini{margin:0;padding:3px 8px;font-size:18px;line-height:1;flex:none}
+.recovery-link{margin-top:12px;font-size:13px}
+.auth-language{font-size:12px;display:block;margin-bottom:16px}
+.auth-language select{margin-top:5px;width:100%}
+.recovery-screen{position:fixed;inset:0;z-index:10000;overflow:auto;display:grid;place-items:center;padding:24px;background:#f8fafc}
+.recovery-screen .go-login-card{width:min(100%,440px);padding:28px;background:#fff;border:1px solid #e4e7ec;border-radius:16px}
+.recovery-screen label{display:block;margin:16px 0;font-weight:600;font-size:14px}
+.recovery-screen input{display:block;width:100%;margin-top:7px}
+.recovery-screen a{color:#465fff;font-size:14px}
+.warning{color:#b42318!important}
+@media(prefers-color-scheme:dark){.recovery-screen{background:#101828}.recovery-screen .go-login-card{background:#1d2939;border-color:#455469;color:#f8fafc}.warning{color:#fda4af!important}.recovery-screen a{color:#a5b4fc}}
+
+@media(min-width:1201px){.dashboard-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}

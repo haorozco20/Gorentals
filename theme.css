@@ -301,3 +301,20 @@ body>main #auth{max-width:520px;margin:40px auto}
 .fleet-card-reference{grid-column:1;font-size:11px}
 .fleet-card-link{grid-column:2;grid-row:1 / span 3;padding:0;margin:0;font-size:12px;white-space:nowrap}
 @media(max-width:560px){.fleet-card-grid{grid-template-columns:minmax(0,1fr);gap:8px}.fleet-card{padding:10px;gap:10px}.fleet-card-content{padding:0}.fleet-card-link{grid-column:1;grid-row:auto;font-size:11px}}
+
+/* Keep compact fleet cards and navigation consistent with dark surfaces. */
+@media(prefers-color-scheme:dark){
+ :root{--card:#202d40;--surface-secondary:#27384d}
+ .fleet-card{background:#202d40;color:#f8fafc;border-color:#455469}
+ .fleet-card:hover{background:#27384d;border-color:#a5b4fc}
+ .fleet-card-content strong{color:#f8fafc}
+ .fleet-card-plate,.fleet-card-reference{color:#bdc8d9}
+ .fleet-card-link{color:#a5b4fc}
+ .fleet-card-photo{background:#27384d}
+ .fleet-card-fallback{color:#bdc8d9}
+ .nav button{color:#cbd5e1}
+ .nav button svg{color:inherit;stroke:currentColor}
+ .nav button:hover{color:#f8fafc;background:#27384d}
+ .nav button.active{background:#25375c;color:#c7d2fe}
+ .policy-due,.policy-expired,.policy-missing,.notice.warning,body>main .status.warning{background:#492b32;color:#fda4af;border-color:#7f4653}
+}

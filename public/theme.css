@@ -130,3 +130,17 @@ body>main #auth{max-width:520px;margin:40px auto}
 .rental-payment-summary{padding:14px 20px;background:#f9fafb;border:1px solid #e4e7ec;border-radius:12px;margin-top:12px}.rental-payment-summary>div{display:flex;justify-content:space-between;gap:14px;padding:7px 0;flex-wrap:wrap}.rental-payment-summary strong{color:#101828;font-weight:600}.rental-payment-summary .unpaid-balance,.rental-payment-summary .warning{color:#b42318}.rental-payment-summary p:empty{display:none}
 
 .dashboard-card{text-align:left;width:100%;font:inherit;cursor:pointer;transition:border-color .15s,box-shadow .15s}.dashboard-card:hover{border-color:#8090ff;box-shadow:0 4px 12px #465fff12}.dashboard-card:focus-visible{outline:3px solid #8090ff;outline-offset:3px}.dashboard-card span{color:#465fff}
+
+
+/* Customer cards: clean directory with alphabetical results */
+.customer-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.customer-directory-card{display:flex;flex-direction:column;align-items:stretch;gap:13px;width:100%;min-width:0;text-align:left;background:#fff;border:1px solid #e4e7ec;border-radius:14px;padding:18px;min-height:158px;color:#344054}
+.customer-directory-card:hover{border-color:#8090ff;box-shadow:0 3px 12px #465fff12}
+.customer-directory-card-top{display:flex;align-items:center;gap:12px;min-width:0}
+.customer-directory-initials{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;background:#eef2ff;color:#465fff;font-weight:600;font-size:14px}
+.customer-directory-card-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+.customer-directory-card-info strong{font-size:15px;color:#101828;font-weight:600;overflow-wrap:anywhere}
+.customer-directory-card-info>span{font-size:12px;color:#667085}
+.customer-directory-contact{font-size:13px;color:#667085;overflow-wrap:anywhere}
+.customer-directory-open{margin-top:auto;color:#465fff;font-size:12px;font-weight:600}
+@media(max-width:520px){.customer-card-grid{grid-template-columns:1fr;gap:10px}.customer-directory-card{min-height:134px;padding:15px}}

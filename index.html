@@ -318,7 +318,7 @@ function representativeVehiclePhoto(vehicle){
  const make=String(vehicle.make||'').toLowerCase(),model=String(vehicle.model||'').toLowerCase(),year=Number(vehicle.year||0);
  if(make.includes('toyota')&&model.includes('corolla'))return 'https://commons.wikimedia.org/wiki/Special:FilePath/2019-2022_Toyota_Corolla.jpg?width=600';
  if(make.includes('hyundai')&&model.includes('tucson'))return year>=2023?'https://upload.wikimedia.org/wikipedia/commons/0/0c/2023_Hyundai_Tucson_Signature_%28India%29_front_view.jpg':'https://upload.wikimedia.org/wikipedia/commons/7/75/2021_Hyundai_Tucson_Ultimate_T-GDi_MHEV_1.6.jpg';
- if(make.includes('mitsubishi')&&model.includes('montero'))return 'https://commons.wikimedia.org/wiki/Special:FilePath/Mitsubishi%20Montero%20GLS%202015.jpg?width=600';
+ if(make.includes('mitsubishi')&&model.includes('montero'))return 'https://www.dubicars.com/images/ae0670/w_1300x760/kavak/791e20a5-f9ea-4524-a8e7-23efac6722c1.jpeg';
  if(make.includes('mitsubishi')&&model.includes('l200'))return 'https://img.ovoiture.ma/vehicles/mitsubishi/l200/01.jpg';
  if(make.includes('toyota')&&model.includes('raize'))return 'https://toyotaninhbinhvn.com/wp-content/uploads/2025/01/z6203442886156_ee4c57cefccc06f19e90c3b1f98ab7bf.jpg?v=1736175789';
  return '';

@@ -250,3 +250,10 @@ body>main #auth{max-width:520px;margin:40px auto}
  .dashboard-card span{color:#a5b4fc}
  #go-cloud-status{color:#a7f3d0}
 }
+
+/* Vehicle cards open a separate rental history view rather than expanding in place. */
+.rental-vehicle-open{display:flex;align-items:center;gap:10px;width:100%;padding:15px 14px;min-height:80px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.rental-vehicle-open:hover{background:rgba(110,125,160,.08)}
+.rental-vehicle-open:focus-visible{outline:3px solid #8090ff;outline-offset:-3px}
+.rental-history-list{border-top:0;padding:4px 0;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+@media(max-width:560px){.rental-history-list{grid-template-columns:1fr}}

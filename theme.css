@@ -185,3 +185,68 @@ body>main #auth{max-width:520px;margin:40px auto}
 
 .vehicle-reference-label{font-size:11px;line-height:1.35;color:#667085;max-width:180px}
 @media(prefers-color-scheme:dark){.vehicle-reference-label{color:#a8b3c7}}
+
+/* Vehicle-grouped rental directory: touch-friendly expandable cards. */
+.rental-directory-tools{margin:12px 0 18px}
+.rental-directory-tools label{display:block;margin-bottom:7px;font-weight:600}
+.rental-directory-tools input{width:100%;max-width:480px}
+.rental-directory-tools .help{margin:8px 0 0}
+.rental-vehicle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:13px;align-items:start}
+.rental-vehicle-card{border:1px solid #e4e7ec;background:#fff;border-radius:14px;overflow:hidden;min-width:0}
+.rental-vehicle-card[hidden]{display:none!important}
+.rental-vehicle-card summary{list-style:none;display:flex;align-items:center;gap:10px;cursor:pointer;padding:15px 14px;min-height:80px}
+.rental-vehicle-card summary::-webkit-details-marker{display:none}
+.rental-vehicle-card summary:focus-visible{outline:3px solid #8090ff;outline-offset:-3px}
+.rental-vehicle-icon{font-size:22px;width:34px;flex:none}
+.rental-vehicle-name{display:flex;flex:1;min-width:0;flex-direction:column;gap:2px}
+.rental-vehicle-name strong{font-size:14px;color:#101828;overflow-wrap:anywhere}
+.rental-vehicle-name small{font-size:12px;color:#667085}
+.rental-vehicle-count{text-align:right;font-size:12px;color:#667085;max-width:100px}
+.rental-chevron{font-size:22px;color:#667085}
+.rental-vehicle-card[open] .rental-chevron{transform:rotate(180deg)}
+.rental-bookings{border-top:1px solid #e4e7ec;padding:12px;display:grid;gap:9px}
+.rental-booking{padding:12px;border:1px solid #e4e7ec;border-radius:10px;background:#f9fafb}
+.rental-booking-main,.rental-booking-bottom{display:flex;justify-content:space-between;align-items:center;gap:9px}
+.rental-booking-main strong,.rental-booking-bottom strong{font-size:13px;color:#101828}
+.rental-booking .help{margin:8px 0}
+@media(max-width:560px){.rental-vehicle-grid{grid-template-columns:1fr}.rental-directory-panel{padding:16px}}
+
+/* Make dashboard icons visible without depending on an image URL or color mode. */
+.dashboard-card:before{background-image:none!important;display:grid;place-items:center;font-size:22px;line-height:1;content:'▣';color:#344054;background-color:#eef2ff}
+.dashboard-card:nth-child(1):before{content:'🚗'}
+.dashboard-card:nth-child(2):before{content:'🔑'}
+.dashboard-card:nth-child(3):before{content:'💵'}
+.dashboard-card:nth-child(4):before{content:'🛡️'}
+
+@media(prefers-color-scheme:dark){
+ :root{--brand:#a5b4fc;--ink:#f8fafc;--muted:#bdc8d9;--line:#455469}
+ .rental-vehicle-card,.rental-booking{background:#202d40;border-color:#455469;color:#f2f4f7}
+ .rental-bookings{border-color:#455469}
+ .rental-vehicle-card summary:hover,.rental-booking:hover{background:#27384d}
+ .rental-vehicle-name strong,.rental-booking-main strong,.rental-booking-bottom strong{color:#f8fafc}
+ .rental-vehicle-name small,.rental-vehicle-count,.rental-chevron{color:#c7d2e2}
+ .dashboard-card:before{background-color:#334761;color:#f2f4f7}
+ .customer-metrics strong,.loan-monthly-total,.loan-monthly-total strong,.customer-contact dd,.customer-profile .profile-heading h2{color:#f8fafc}
+ .customer-metrics span,.vehicle-reference-label,.fleet-plate,.loan-monthly-total .help{color:#c7d2e2}
+ .customer-avatar,.customer-directory-initials{background:#334761;color:#e0e7ff}
+ .customer-directory-card,.customer-directory-card-info strong,.customer-directory-contact{color:#f2f4f7}
+ .customer-search,.profile-notes,.customer-contact,.customer-card-grid,.loan-monthly-total{border-color:#455469}
+ .rental-total,.loan-payment-breakdown,.rental-payment-summary{background:#253449;border-color:#455469}
+ .policy-status,.tag{font-weight:600}
+ .policy-active,.tag{color:#a7f3d0;background:#164e3e}
+ .policy-due{color:#fde68a;background:#4b3716}
+ .policy-expired,.policy-missing{color:#fecdd3;background:#552b36}
+ .btn.primary,.top>.actions .btn.primary{color:#fff;background:#465fff;border-color:#6879ff}
+ .mini,.btn,button.alt{color:#f2f4f7;background:#273449;border-color:#526079}
+ .mini:hover,.btn:hover,button.alt:hover{background:#35475e}
+ #content>.actions button{color:#bdc8d9}
+ #content>.actions button.primary{color:#f8fafc;background:#3e4d63}
+ input,select,textarea{color:#f8fafc;background:#202d40;border-color:#526079}
+ input::placeholder,textarea::placeholder{color:#adbcd0}
+ input:focus,select:focus,textarea:focus{outline-color:#a5b4fc}
+ .notice,.rental-tabs button.tab-selected{color:#e0e7ff}
+ .heading,.panel h3,.section-head h3,.card strong,.modal h3{color:#f8fafc}
+ .card small,.card span,.help,.muted,.customer-contact dt{color:#c7d2e2}
+ .dashboard-card span{color:#a5b4fc}
+ #go-cloud-status{color:#a7f3d0}
+}

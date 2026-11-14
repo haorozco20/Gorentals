@@ -144,3 +144,41 @@ body>main #auth{max-width:520px;margin:40px auto}
 .customer-directory-contact{font-size:13px;color:#667085;overflow-wrap:anywhere}
 .customer-directory-open{margin-top:auto;color:#465fff;font-size:12px;font-weight:600}
 @media(max-width:520px){.customer-card-grid{grid-template-columns:1fr;gap:10px}.customer-directory-card{min-height:134px;padding:15px}}
+
+
+/* Automatic system appearance: preserves the existing light theme unchanged. */
+@media (prefers-color-scheme: dark) {
+ :root {color-scheme:dark;--ink:#f2f4f7;--muted:#a8b3c7;--line:#344054;color:#e4e7ec;background:#101828}
+ body{background:#101828;color:#e4e7ec}
+ .side,.top>.actions,.card,.panel,.modal,.customer-directory-card,body>main section,#go-auth,#go-cloud-status{background:#1d2939;color:#e4e7ec;border-color:#344054}
+ #go-auth{background:#101828}
+ .bottom,.rental-total,.rental-payment-summary,.loan-payment-breakdown,.notice,.rental-tabs button,.policy-status,.bar,#content>.actions,.customer-avatar,.card:before,.vehicle-photo-frame{background:#273449;border-color:#344054;color:#d0d5dd}
+ .nav button:hover,.btn:hover,button.alt:hover,.mini:hover,.customer-names button:hover,tbody tr:hover{background:#273449}
+ .nav button.active,.rental-tabs button.tab-selected{background:#25375c;color:#a5b4fc}
+ input,select,textarea,input[readonly],input[type=file],.btn,button.alt,.mini,body>main button.alt{background:#202d40;color:#f2f4f7;border-color:#475467}
+ input::placeholder,textarea::placeholder{color:#98a2b3}
+ input[type=file]::file-selector-button{background:#344054;color:#c7d2fe}
+ label,.field label,.logo,.heading,.card strong,.panel h3,.section-head h3,.modal h3,#go-auth h1,body>main h1,body>main h2,.profile-heading h2,.customer-directory-card-info strong,.rowstat strong,.rental-total strong,.rental-total output,.loan-payment-breakdown strong,.rental-payment-summary strong,.customer-contact dd,td strong,.customer-names button,.rental-open,.customer-directory-card{color:#f2f4f7}
+ .card small,.card span,.muted,.help,.eyebrow,.sub,.bottom,.profile-eyebrow,.customer-contact dt,.customer-directory-card-info>span,.customer-directory-contact,body>main p,#go-auth p,#go-auth #go-auth-status,td,th{color:#a8b3c7}
+ th{background:#202d40;border-color:#344054}
+ td,tr:last-child td,.foot,.customer-names li+li,hr,.customer-contact,.rental-tabs{border-color:#344054}
+ tbody tr:hover{background:#273449}
+ .modal,.overlay{color:#e4e7ec}
+ .foot{background:#1d2939}
+ .tag,.policy-active{background:#153c32;color:#86efac}
+ .tag.out{background:#344054;color:#d0d5dd}
+ .policy-due{background:#463819;color:#fcd34d}
+ .policy-expired,.policy-missing,.notice.warning,body>main .status.warning{background:#492b32;color:#fda4af;border-color:#7f4653}
+ .policy-upcoming{background:#203b58;color:#93c5fd}
+ .notice,body>main .status{background:#25375c;color:#c7d2fe;border-color:#394d82}
+ .btn.danger,button.danger,body>main button.danger{background:#37252c;color:#fda4af;border-color:#7f4653}
+ .rental-payment-summary .unpaid-balance,.rental-payment-summary .warning{color:#fda4af}
+ .go-failure{color:#fda4af!important;background:#492b32!important;border-color:#7f4653!important}
+ #content>.actions button.primary{background:#344054;color:#f2f4f7}
+ .customer-directory-initials{background:#25375c;color:#c7d2fe}
+ .customer-directory-open,.customer-names button:hover,.dashboard-card span{color:#a5b4fc}
+ .customer-directory-card:hover,.dashboard-card:hover{border-color:#818cf8}
+ .vehicle-photo-placeholder{color:#a8b3c7}
+ input:focus,select:focus,textarea:focus{border-color:#818cf8;box-shadow:0 0 0 4px #818cf833}
+ a,.rental-directory td:first-child .rental-open{color:#a5b4fc}
+}

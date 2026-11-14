@@ -452,3 +452,21 @@ body>main #auth{max-width:520px;margin:40px auto}
 .employee-success-mark{display:grid;place-items:center;margin:0 auto 18px;width:56px;height:56px;border-radius:50%;background:#ecfdf3;color:#027a48;font-size:28px}
 .employee-success-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
 @media(prefers-color-scheme:dark){.employee-success-mark{background:#164435;color:#6ee7b7}}
+
+/* Full-access rental wizard reuses existing fields and save behavior. */
+.owner-rental-modal{width:min(780px,100%)}
+.owner-rental-steps{margin-top:22px}
+.owner-rental-step{border:0;padding:0;margin:0;min-width:0}
+.owner-rental-step legend{font-size:20px;font-weight:600;color:var(--ink);margin-bottom:18px;padding:0}
+.owner-rental-additional{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
+.owner-rental-additional summary{cursor:pointer;font-size:14px;font-weight:500;color:var(--ink)}
+.owner-rental-additional .fields{margin-top:16px}
+.owner-rental-step>.field{margin-top:12px}
+.owner-rental-footer{position:sticky;bottom:-32px;z-index:2;background:#fff;padding:18px 0 8px;align-items:center;gap:8px;flex-wrap:wrap}
+.owner-rental-total{display:flex;flex-direction:column;gap:2px;margin-right:auto}
+.owner-rental-total>span,.owner-rental-total>small{font-size:12px;color:var(--muted)}
+.owner-rental-total>strong{font-size:25px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+@media(prefers-color-scheme:dark){.owner-rental-footer{background:#1d2939}}
+@media(max-width:760px){.owner-rental-steps{gap:8px}.owner-rental-steps li{font-size:11px;gap:5px}.owner-rental-steps li span{width:24px;height:24px}.owner-rental-footer{bottom:-18px}.owner-rental-total{flex-basis:100%;margin-bottom:7px}}
+.owner-rental-phone{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;min-width:0}
+.owner-rental-phone select,.owner-rental-phone input{min-width:0}

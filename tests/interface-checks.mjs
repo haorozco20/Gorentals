@@ -42,3 +42,15 @@ form.elements.confirmation.value='12345678';validSession=false;await form.onsubm
 validSession=true;await form.onsubmit({preventDefault(){}});assert.equal(updates,1);assert.ok(status.textContent.includes('Password updated.'));
 await created[0].onclick();assert.equal(emails,1);assert.ok(created[1].textContent.includes('If an account exists'));
 console.log('Passed: syntax, root/public sync, language switching, dashboard totals, visible search, signed-out flow, and mocked password recovery.');
+
+const profilesContext={window:{},document:{}};vm.createContext(profilesContext);
+vm.runInContext(await fs.readFile(new URL('go-employees.js',root),'utf8'),profilesContext);
+const employees=profilesContext.window.GoEmployees;
+assert.equal(employees.validate({name:' Alice ',email:' ALICE@EXAMPLE.COM '}).email,'alice@example.com');
+assert.throws(()=>employees.validate({name:'Alice',email:'invalid'}));
+assert.throws(()=>employees.validate({name:'',email:'alice@example.com'}));
+assert.throws(()=>employees.validate({name:'Alice',email:'alice@example.com',notes:'x'.repeat(2001)}));
+assert.equal(employees.linkedAccount({email:'Alice@Example.com'},[{email:'alice@example.com',active:false}]).active,false);
+assert.equal(employees.linkedAccount({email:'other@example.com'},[{email:'alice@example.com'}]),null);
+assert.equal(await fs.readFile(new URL('go-employees.js',root),'utf8'),await fs.readFile(new URL('public/go-employees.js',root),'utf8'));
+console.log('Passed: employee profile validation, normalized email linking, and synchronized profile module.');

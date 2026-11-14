@@ -545,7 +545,7 @@ function extendedReportsHTML(){
  const previous=monthTotal(moveMonth(current,-1)),selected=monthTotal(current);
  const change=(now,before)=>before?((now-before)/Math.abs(before)*100).toFixed(1)+'%':(now?'—':'0%');
  const compare=(name,now,before,money=true)=>'<tr><td>'+esc(name)+'</td><td>'+ (money?usd(now):now)+'</td><td>'+(money?usd(before):before)+'</td><td>'+esc(change(now,before))+'</td></tr>';
- const reportMonths=Array.from({length:6},(_,i)=>moveMonth(current,i-5));
+ const reportMonths=Array.from({length:3},(_,i)=>moveMonth(current,i-2));
  const trend=reportMonths.map(key=>({key,...monthTotal(key)}));
  const trendMax=Math.max(1,...trend.flatMap(x=>[x.charges,x.expenses]));
  const performanceMonth='<section style="margin-top:22px"><h3>'+(es?'Rendimiento mensual':'Monthly Performance')+'</h3>'+
@@ -559,7 +559,7 @@ function extendedReportsHTML(){
  compare(es?'Gastos':'Expenses',selected.expenses,previous.expenses),
  compare(es?'Resultado estimado':'Estimated result',selected.charges-selected.expenses-mInsurance-mLoan,previous.charges-previous.expenses-mInsurance-mLoan)
  ].join(''))+
- h(es?'Tendencia de los últimos seis meses':'Six-month trend')+
+ h(es?'Tendencia de los últimos tres meses':'Three-month trend')+
  trend.map(x=>'<div style="margin:14px 0"><strong>'+esc(x.key)+'</strong><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:5px">'+
  '<div><small>'+(es?'Cargos':'Charges')+'</small>'+bar('',x.charges,trendMax)+'</div><div><small>'+(es?'Gastos':'Expenses')+'</small>'+bar('',x.expenses,trendMax)+'</div></div></div>').join('')+
  '<p class="help">'+(es?'Los cargos se asignan al mes de entrega y los gastos según su fecha. Los pagos pueden haberse recibido en otro mes. El resultado estimado resta seguros y préstamos programados, pero no es utilidad neta contable.':'Rental charges use pickup month and expenses use their recorded date. Payments may have been collected in a different month. Estimated result subtracts scheduled fleet insurance and loans, but is not accounting net profit.')+'</p></section>';

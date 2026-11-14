@@ -353,3 +353,23 @@ body>main #auth{max-width:520px;margin:40px auto}
 @media(prefers-color-scheme:dark){.recovery-screen{background:#101828}.recovery-screen .go-login-card{background:#1d2939;border-color:#455469;color:#f8fafc}.warning{color:#fda4af!important}.recovery-screen a{color:#a5b4fc}}
 
 @media(min-width:1201px){.dashboard-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Compact header menus keep occasional administration actions out of the main toolbar. */
+.top>.actions{justify-content:flex-end;gap:10px;min-height:70px;padding-top:12px;padding-bottom:12px}
+.toolbar-refresh{display:grid;place-items:center;width:42px;min-height:42px;padding:10px;order:-1}
+.toolbar-refresh svg,.toolbar-dropdown>summary svg{width:20px;height:20px;flex:none}
+.toolbar-dropdown{position:relative}
+.toolbar-dropdown>summary{display:flex;align-items:center;gap:8px;list-style:none;min-height:42px;cursor:pointer;user-select:none}
+.toolbar-dropdown>summary::-webkit-details-marker{display:none}
+.toolbar-dropdown[open]>summary{border-color:#8090ff}
+.toolbar-menu{position:absolute;top:calc(100% + 9px);right:0;z-index:100;width:250px;max-width:calc(100vw - 32px);padding:8px;background:#fff;border:1px solid #e4e7ec;border-radius:12px;box-shadow:0 12px 28px #10182821}
+.toolbar-menu .btn{width:100%;display:block;text-align:left;white-space:normal;margin:0;border:0;box-shadow:none;background:transparent;padding:11px 12px;font-size:13px;border-radius:7px}
+.toolbar-menu .btn:hover{background:#f2f4f7}
+.toolbar-submenu>summary{cursor:pointer;font-size:13px;font-weight:500;padding:11px 12px;border-radius:7px}
+.toolbar-submenu>summary:hover{background:#f2f4f7}
+#backup-menu{padding-left:12px;border-left:1px solid #e4e7ec;margin-left:12px}
+#account-email{padding:8px 12px;margin:0 0 4px;overflow-wrap:anywhere;border-bottom:1px solid #e4e7ec}
+#team-menu:empty{display:none}
+@media(prefers-color-scheme:dark){.toolbar-menu{background:#1d2939;border-color:#455469;box-shadow:0 12px 28px #0005}.toolbar-menu .btn,.toolbar-submenu>summary{color:#f8fafc}.toolbar-menu .btn:hover,.toolbar-submenu>summary:hover{background:#273449}#backup-menu,#account-email{border-color:#455469}}
+@media(max-width:760px){.top>.actions{gap:7px}.toolbar-dropdown>summary{font-size:12px;padding:8px 10px}.toolbar-dropdown>summary svg{width:17px;height:17px}.toolbar-menu .btn{font-size:13px;padding:11px 12px}.toolbar-refresh{width:40px}.top>.actions .lang{max-width:110px}}
+@media(max-width:380px){.toolbar-dropdown>summary{gap:5px;padding:8px}.toolbar-dropdown>summary svg{display:none}.top>.actions{gap:5px}.top>.actions .lang{max-width:95px}}

@@ -187,12 +187,13 @@ function loanDeathInsuranceHTML(loans){
 function loanDeathInsuranceForm(id){
  const vehicle=byId('vehicles',id),es=db.language==='es';if(!vehicle)return;
  openLoanModal(es?'Editar seguro de vida / desgravamen':'Edit loan death insurance','<p class="help">'+esc(vname(vehicle))+' · '+esc(vehicle.plate)+'</p><form id="loan-death-insurance-form"><div class="fields">'+
- field(es?'Cargo mensual USD':'Monthly insurance fee USD','loanDeathInsuranceFee',vehicle.loanDeathInsuranceFee??0,'number','min="0" step="0.01" required')+
+ moneyField(es?'Cargo mensual USD':'Monthly insurance fee USD','loanDeathInsuranceFee',vehicle.loanDeathInsuranceFee??0,'min="0" step="0.01" required',vehicle)+
  pick(es?'Cómo se cobra':'How it is billed','loanDeathInsuranceIncluded',[['no',es?'Se cobra aparte':'Charged separately'],['yes',es?'Ya incluido en la cuota':'Already included in loan payment']],vehicle.loanDeathInsuranceIncluded?'yes':'no')+
  '</div><div class="foot"><button class="btn" type="button" id="loan-close">'+t('cancel')+'</button><button class="btn primary" type="submit">'+t('save')+'</button></div></form>');
  document.querySelector('#loan-death-insurance-form').onsubmit=event=>{
-  event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries());const amount=Number(data.loanDeathInsuranceFee);
-  if(data.loanDeathInsuranceFee===''||!Number.isFinite(amount)||amount<0){alert(es?'Ingresa un cargo válido.':'Enter a valid fee.');return}
+  event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries());const converted=window.GoCurrency.convert(data.loanDeathInsuranceFee,data.loanDeathInsuranceFeeCurrency,data.loanDeathInsuranceFeeExchangeRate);const amount=converted?.paid;
+  if(!converted||!Number.isFinite(amount)||amount<0){alert(es?'Ingresa un cargo y tipo de cambio válidos.':'Enter a valid fee and exchange rate.');return}
+  vehicle.moneyEntries={...(vehicle.moneyEntries||{}),loanDeathInsuranceFee:{currency:data.loanDeathInsuranceFeeCurrency,originalAmount:converted.paymentOriginalAmount,exchangeRate:converted.paymentExchangeRate}};
   vehicle.loanDeathInsuranceFee=Math.round(amount*100)/100;vehicle.loanDeathInsuranceIncluded=data.loanDeathInsuranceIncluded==='yes';
   save();document.querySelector('#modalRoot').innerHTML='';render();
  };
@@ -288,19 +289,19 @@ function loanPaymentForm(id){
  const v=byId('vehicles',id),es=db.language==='es';if(!v||Number(v.loan||0)<=0)return;
  openLoanModal(es?'Registrar pago del préstamo':'Record loan payment','<p class="help">'+esc(vname(v))+' · '+esc(v.plate)+'<br>'+(es?'Saldo pendiente: ':'Outstanding balance: ')+usd(v.loan)+'</p><form id="loan-payment-form"><div class="fields">'+
  field(es?'Fecha del pago':'Payment date','date',new Date().toISOString().slice(0,10),'date','required')+
- field(es?'Pago total USD':'Total payment USD','amount',scheduledLoanCost(v)||'','number','min="0.01" step="0.01" required')+
- field(es?'Capital pagado USD':'Principal paid USD','principal','','number','min="0" step="0.01" required')+
+ moneyField(es?'Pago total USD':'Total payment USD','amount',scheduledLoanCost(v)||'','min="0.01" step="0.01" required')+
+ moneyField(es?'Capital pagado USD':'Principal paid USD','principal','','min="0" step="0.01" required')+
  field(es?'Próximo vencimiento (opcional)':'Next due date (optional)','nextDue',v.loanNextDue||'','date')+
  reviewField(t('notes'),'notes','')+'</div><p class="help">'+(es?'El capital reduce el saldo. La diferencia entre el pago total y el capital se registra como intereses y cargos.':'Principal reduces the balance. The difference between the total payment and principal is recorded as interest and fees.')+'</p><div class="foot"><button class="btn" type="button" id="loan-close">'+t('cancel')+'</button><button class="btn primary" type="submit">'+(es?'Registrar pago':'Record payment')+'</button></div></form>');
  document.querySelector('#loan-payment-form').onsubmit=event=>{
   event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries());
-  try{recordLoanPayment(v,data);save();document.querySelector('#modalRoot').innerHTML='';render()}catch(error){alert(error.message)}
+  try{for(const name of ['amount','principal']){const converted=window.GoCurrency.convert(data[name],data[name+'Currency'],data[name+'ExchangeRate']);if(!converted)throw Error(es?'Revisa el monto y tipo de cambio.':'Check amount and exchange rate.');data[name]=converted.paid;data[name+'Original']={currency:data[name+'Currency'],originalAmount:converted.paymentOriginalAmount,exchangeRate:converted.paymentExchangeRate}}recordLoanPayment(v,data);save();document.querySelector('#modalRoot').innerHTML='';render()}catch(error){alert(error.message)}
  };
 }
 function recordLoanPayment(vehicle,data){
  const es=db.language==='es',amount=Math.round(Number(data.amount)*100),principal=Math.round(Number(data.principal)*100),balance=Math.round(Number(vehicle.loan||0)*100);
  if(!data.date||data.amount===''||data.principal===''||!Number.isFinite(amount)||!Number.isFinite(principal)||amount<=0||principal<0||principal>amount||principal>balance)throw Error(es?'Revisa el pago y el capital. El capital no puede superar el pago ni el saldo pendiente.':'Check payment and principal. Principal cannot exceed the payment or outstanding balance.');
- const entry={id:uid(),date:data.date,amount:amount/100,principal:principal/100,interestFees:(amount-principal)/100,balanceAfter:(balance-principal)/100,notes:String(data.notes||'').trim()};
+ const entry={id:uid(),date:data.date,amount:amount/100,principal:principal/100,interestFees:(amount-principal)/100,balanceAfter:(balance-principal)/100,notes:String(data.notes||'').trim(),moneyEntries:{amount:data.amountOriginal||null,principal:data.principalOriginal||null}};
  vehicle.loanPayments=[...(Array.isArray(vehicle.loanPayments)?vehicle.loanPayments:[]),entry];vehicle.loan=entry.balanceAfter;if(entry.balanceAfter===0&&principal>0)vehicle.loanPaidOff=true;
  if(data.nextDue)vehicle.loanNextDue=data.nextDue;
 }

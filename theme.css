@@ -318,3 +318,11 @@ body>main #auth{max-width:520px;margin:40px auto}
  .nav button.active{background:#25375c;color:#c7d2fe}
  .policy-due,.policy-expired,.policy-missing,.notice.warning,body>main .status.warning{background:#492b32;color:#fda4af;border-color:#7f4653}
 }
+
+/* Vehicle cutouts: preserve the full car and blend into either color theme. */
+.fleet-card-photo,.rental-vehicle-icon,.vehicle-photo-frame{background:transparent}
+.fleet-card-photo img,.rental-vehicle-icon img,.vehicle-photo-frame img{object-fit:contain;object-position:center}
+.fleet-card-photo{overflow:visible}
+@media(prefers-color-scheme:dark){
+ .fleet-card-photo,.rental-vehicle-icon,.vehicle-photo-frame{background:transparent}
+}

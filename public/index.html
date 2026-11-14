@@ -315,14 +315,14 @@ function loanHistory(id){
 
 const vehiclePhotoURLs=new Map();
 function representativeVehiclePhoto(vehicle){
- const photos={"M280357":"montero-2017.jpeg","M411649":"corolla-brown.jpg","M416117":"corolla-blue.jpg","M386243":"tucson-2021.jpg","M351430":"tucson-2021.jpg","M372389":"tucson-2023.jpg","M457950":"l200-2024.jpg","M471235":"raize-2026.png"};
+ const photos={"M280357":"montero-2017-cutout.png","M411649":"corolla-brown-cutout.png","M416117":"corolla-blue-cutout.png","M386243":"tucson-2021-cutout.png","M351430":"tucson-2021-cutout.png","M372389":"tucson-2023-cutout.png","M457950":"l200-2024-cutout.png","M471235":"raize-2026.png"};
  const plate=String(vehicle.plate||'').trim().toUpperCase();
  if(photos[plate])return '/vehicle-images/'+photos[plate];
  const name=(String(vehicle.make||'')+' '+String(vehicle.model||'')).toLowerCase();
- if(name.includes('corolla'))return '/vehicle-images/corolla-blue.jpg';
- if(name.includes('tucson'))return '/vehicle-images/'+(Number(vehicle.year)>=2023?'tucson-2023.jpg':'tucson-2021.jpg');
- if(name.includes('montero'))return '/vehicle-images/montero-2017.jpeg';
- if(name.includes('l200'))return '/vehicle-images/l200-2024.jpg';
+ if(name.includes('corolla'))return '/vehicle-images/corolla-blue-cutout.png';
+ if(name.includes('tucson'))return '/vehicle-images/'+(Number(vehicle.year)>=2023?'tucson-2023-cutout.png':'tucson-2021-cutout.png');
+ if(name.includes('montero'))return '/vehicle-images/montero-2017-cutout.png';
+ if(name.includes('l200'))return '/vehicle-images/l200-2024-cutout.png';
  if(name.includes('raize'))return '/vehicle-images/raize-2026.png';
  return '';
 }

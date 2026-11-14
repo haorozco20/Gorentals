@@ -182,3 +182,6 @@ body>main #auth{max-width:520px;margin:40px auto}
  input:focus,select:focus,textarea:focus{border-color:#818cf8;box-shadow:0 0 0 4px #818cf833}
  a,.rental-directory td:first-child .rental-open{color:#a5b4fc}
 }
+
+.vehicle-reference-label{font-size:11px;line-height:1.35;color:#667085;max-width:180px}
+@media(prefers-color-scheme:dark){.vehicle-reference-label{color:#a8b3c7}}

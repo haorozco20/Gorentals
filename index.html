@@ -374,7 +374,232 @@ function fleetDirectoryHTML(compact=false){
   const vehicles=[...db.vehicles].filter(v=>normalize([v.make,v.model,v.year,v.plate].join(' ')).includes(normalize(fleetSearch))).sort((a,b)=>normalize(a.make+' '+a.model).localeCompare(normalize(b.make+' '+b.model),es?'es':'en',{numeric:true})||Number(a.year)-Number(b.year)||String(a.plate||'').localeCompare(String(b.plate||'')));
   return '<section class="panel customer-directory"><div class="section-head"><h3>'+t(compact?'fleet':'vehicles')+'</h3><div class="actions"><button class="btn" data-action="fleet-search" aria-expanded="'+fleetSearchOpen+'" aria-controls="fleet-search-panel">'+(es?'Buscar':'Search')+'</button><button class="btn primary" data-action="new" data-kind="vehicle">+ '+t('add')+'</button></div></div>'+
   '<form id="fleet-search-panel" class="customer-search'+(fleetSearchOpen?'':' hide')+'" role="search"><label for="fleet-search-input">'+(es?'Vehículo o placa':'Vehicle or license plate')+'</label><div class="actions"><input id="fleet-search-input" type="search" autocomplete="off" value="'+esc(fleetSearch)+'" placeholder="'+(es?'Buscar vehículo o placa…':'Search vehicle or plate…')+'"><button class="btn primary" type="submit">'+(es?'Buscar':'Search')+'</button><button class="btn" type="button" data-action="fleet-search-clear">'+(es?'Limpiar':'Clear')+'</button></div></form>'+
-  (vehicles.length?'<ul class="customer-names">'+vehicles.map(v=>'<li><button data-action="vehicle-profile" data-id="'+esc(v.id)+'"><span>'+esc([v.make,v.model,v.year].filter(Boolean).join(' '))+'<span class="fleet-plate"> · '+esc(v.plate||'—')+'</span></span><span aria-hidden="true">→</span></button></li>').join('')+'</ul>':'<div class="empty">'+(fleetSearch?(es?'No se encontraron vehículos.':'No vehicles found.'):t('noRecords'))+'</div>')+'</section>';
+  (vehicles.length?'<div class="fleet-card-grid">'+vehicles.map(v=>{
+    const reference=v.photoPath?'':representativeVehiclePhoto(v);
+    const image=v.photoPath?'<img data-vehicle-photo-path="'+esc(v.photoPath)+'" alt="'+esc(vname(v))+'" loading="lazy" hidden>':reference?'<img src="'+esc(reference)+'" loading="lazy" referrerpolicy="no-referrer" alt="'+esc(vname(v))+'" onload="this.hidden=false;this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" hidden>':'';
+    const photo='<div class="fleet-card-photo">'+image+'<span class="fleet-card-fallback" aria-hidden="true">🚗</span></div>';
+    return '<button type="button" class="fleet-card" data-action="vehicle-profile" data-id="'+esc(v.id)+'">'+photo+'<span class="fleet-card-content"><strong>'+esc(vname(v))+'</strong><span class="fleet-card-plate">'+(es?'Placa: ':'Plate: ')+esc(v.plate||'—')+'</span>'+(reference?'<small class="fleet-card-reference">'+(es?'Foto de referencia':'Reference photo')+'</small>':'')+'<span class="fleet-card-link">'+(es?'Ver perfil':'View profile')+' →</span></span></button>';
+   }).join('')+'</div>':'<div class="empty">'+(fleetSearch?(es?'No se encontraron vehículos.':'No vehicles found.'):t('noRecords'))+'</div>')+'</section>';
+ }
+ const rentals=db.rentals.filter(r=>r.vehicleId===vehicle.id).sort((a,b)=>String(b.pickup||'').localeCompare(String(a.pickup||'')));
+ const expenses=db.expenses.filter(e=>e.vehicleId===vehicle.id).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+ const deleted=ownerDeletedRentals.filter(item=>item.details?.vehicleId===vehicle.id||(!item.details?.vehicleId&&String(item.details?.vehiclePlate||'').trim().toUpperCase()===String(vehicle.plate||'').trim().toUpperCase()));
+ const detail=(label,value)=>'<div><dt>'+esc(label)+'</dt><dd>'+esc(value??'—')+'</dd></div>';
+ const vehicleLoanPanel=()=>'<section class="panel"><div class="section-head"><h3>'+(es?'Préstamo del vehículo':'Vehicle loan')+'</h3><button class="btn primary" data-action="loan-edit" data-id="'+esc(vehicle.id)+'">'+(hasVehicleLoan(vehicle)?t('edit'):(es?'Agregar préstamo':'Add loan'))+'</button></div>'+
+ (hasVehicleLoan(vehicle)?'<div class="customer-metrics"><div><span>'+(es?'Saldo pendiente':'Outstanding balance')+'</span><strong>'+usd(vehicle.loan||0)+'</strong></div><div><span>'+(es?'Pago mensual':'Monthly payment')+'</span><strong>'+usd(scheduledLoanPayment(vehicle))+'</strong></div><div><span>'+(es?'Costo mensual total':'Total monthly cost')+'</span><strong>'+usd(scheduledLoanCost(vehicle))+'</strong></div></div>'+
+ '<dl class="customer-contact">'+detail(es?'Prestamista':'Lender',vehicle.loanLender||'—')+detail(es?'Próximo vencimiento':'Next due',vehicle.loanNextDue||'—')+detail(es?'Estado':'Status',vehicle.loanPaidOff?(es?'Pagado':'Paid off'):(es?'Activo':'Active'))+'</dl>'+
+ '<div class="actions"><button class="btn" data-action="loan-history" data-id="'+esc(vehicle.id)+'">'+(es?'Ver historial completo':'View full payment history')+'</button><button class="btn" data-action="loan-death-insurance" data-id="'+esc(vehicle.id)+'">'+(es?'Seguro de vida':'Death insurance')+'</button>'+(Number(vehicle.loan||0)>0?'<button class="btn primary" data-action="loan-payment" data-id="'+esc(vehicle.id)+'">'+(es?'Registrar pago':'Record payment')+'</button>':'')+'</div>'+
+ '<h3>'+(es?'Últimos pagos':'Recent payments')+'</h3>'+
+ table([es?'Fecha':'Date',es?'Monto':'Amount',es?'Saldo después':'Balance after'],[...(vehicle.loanPayments||[])].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).slice(0,10).map(p=>'<tr><td>'+esc(p.date||'—')+'</td><td>'+usd(p.amount||0)+'</td><td>'+usd(p.balanceAfter||0)+'</td></tr>').join('')):'<p class="help">'+(es?'Este vehículo no tiene préstamo registrado.':'No loan recorded for this vehicle.')+'</p>')+'</section>';
+ const rows=rentals.map(r=>'<tr><td>'+esc(byId('customers',r.customerId)?.name||'—')+'</td><td>'+esc(r.pickup)+' '+esc(formatTime(r.pickupTime))+' → '+esc(r.dropoff)+' '+esc(formatTime(r.dropoffTime))+'</td><td>'+esc(({reserved:es?'Reservado':'Reserved',rented:es?'Alquilado':'Rented',returned:es?'Devuelto':'Returned'})[r.status]||r.status)+'</td><td>'+usd(r.total)+'</td><td><button class="mini" data-action="photos" data-id="'+esc(r.id)+'">'+(es?'Fotos':'Pictures')+'</button><button class="mini" data-action="edit" data-kind="rental" data-id="'+esc(r.id)+'">'+t('edit')+'</button></td></tr>').join('');
+ return '<div class="customer-profile"><div class="customer-profile-toolbar fleet-profile-toolbar"><div class="fleet-profile-navigation"><button class="btn" data-action="fleet-back">← '+(es?'Volver a vehículos':'Back to vehicles')+'</button>'+'<div class="actions loan-view-tabs" role="group" aria-label="'+t('loans')+'"><button class="btn'+(loanView==='loans'?' primary':'')+'" data-action="loan-view" data-view="loans">'+t('loans')+'</button><button class="btn'+(loanView==='insurance'?' primary':'')+'" data-action="loan-view" data-view="insurance">'+(es?'Seguro de vida':'Death insurance')+'</button></div>'+
+ '<div class="cards loan-cards"><div class="card"><small>'+(es?'Saldo pendiente total':'Total outstanding')+'</small><strong>'+usd(loans.reduce((n,v)=>n+Number(v.loan||0),0))+'</strong></div><div class="card"><small>'+(es?'Costo mensual de préstamos':'Monthly loan cost')+'</small><strong>'+usd(monthlyTotal)+'</strong></div><div class="card"><small>'+(es?'Préstamos activos':'Active loans')+'</small><strong>'+outstanding.length+'</strong></div></div>'+
+ (loanView==='insurance'?loanDeathInsuranceHTML(loans):
+ '<section class="panel"><div class="section-head"><h3>'+(es?'Préstamos por vehículo':'Loans by vehicle')+'</h3><button class="btn primary" data-action="loan-new">+ '+(es?'Agregar préstamo':'Add loan')+'</button></div><p class="help">'+(es?'Selecciona un vehículo para ver saldo, pagos e historial en su perfil.':'Select a vehicle to see its balance, payments and history inside its profile.')+'</p>'+
+ (loans.length?'<ul class="customer-names">'+loans.map(v=>'<li><button data-action="loan-vehicle-profile" data-id="'+esc(v.id)+'"><span><strong>'+esc(vname(v))+'</strong><span class="fleet-plate"> · '+esc(v.plate||'—')+' · '+(v.loanPaidOff?(es?'Pagado':'Paid off'):Number(v.loan||0)>0?usd(v.loan):(es?'Saldo no ingresado':'Balance missing'))+'</span></span><span aria-hidden="true">→</span></button></li>').join('')+'</ul>':'<p class="help">'+(es?'No hay préstamos registrados.':'No loans recorded.')+'</p>')+'</section>');
+}
+
+function loanDeathInsuranceHTML(loans){
+ const es=db.language==='es';
+ return '<section class="panel"><h3>'+(es?'Seguro de vida / desgravamen de préstamos':'Vehicle loan death insurance')+'</h3><p class="help">'+(es?'Ingresa el cargo mensual por vehículo. Indica si ya está incluido en la cuota del banco para evitar sumarlo dos veces.':'Enter the monthly charge for each vehicle. Mark it as included if it is already part of the lender payment, so it is not counted twice.')+'</p>'+
+ table([t('vehicle'),es?'Prestamista':'Lender',es?'Cargo mensual':'Monthly insurance fee',es?'Cobro':'Billing',es?'Total mensual':'Monthly total',t('actions')],loans.map(v=>'<tr><td>'+esc(vname(v))+'<div class="muted">'+esc(v.plate)+'</div></td><td>'+esc(v.loanLender||'—')+'</td><td>'+usd(loanDeathInsuranceFee(v))+'</td><td>'+(v.loanDeathInsuranceIncluded?(es?'Incluido en la cuota':'Included in loan payment'):(es?'Se cobra aparte':'Charged separately'))+'</td><td>'+usd(scheduledLoanCost(v))+'</td><td><button class="mini" data-action="loan-death-insurance" data-id="'+esc(v.id)+'">'+t('edit')+'</button></td></tr>').join(''))+
+ '<div class="loan-monthly-total"><strong>'+(es?'Total de seguro de vida mensual':'Total monthly death insurance fees')+'</strong><strong>'+usd(loans.reduce((n,v)=>n+loanDeathInsuranceFee(v),0))+'</strong></div></section>';
+}
+function loanDeathInsuranceForm(id){
+ const vehicle=byId('vehicles',id),es=db.language==='es';if(!vehicle)return;
+ openLoanModal(es?'Editar seguro de vida / desgravamen':'Edit loan death insurance','<p class="help">'+esc(vname(vehicle))+' · '+esc(vehicle.plate)+'</p><form id="loan-death-insurance-form"><div class="fields">'+
+ moneyField(es?'Cargo mensual USD':'Monthly insurance fee USD','loanDeathInsuranceFee',vehicle.loanDeathInsuranceFee??0,'min="0" step="0.01" required',vehicle)+
+ pick(es?'Cómo se cobra':'How it is billed','loanDeathInsuranceIncluded',[['no',es?'Se cobra aparte':'Charged separately'],['yes',es?'Ya incluido en la cuota':'Already included in loan payment']],vehicle.loanDeathInsuranceIncluded?'yes':'no')+
+ '</div><div class="foot"><button class="btn" type="button" id="loan-close">'+t('cancel')+'</button><button class="btn primary" type="submit">'+t('save')+'</button></div></form>');
+ document.querySelector('#loan-death-insurance-form').onsubmit=event=>{
+  event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries());const converted=window.GoCurrency.convert(data.loanDeathInsuranceFee,data.loanDeathInsuranceFeeCurrency,data.loanDeathInsuranceFeeExchangeRate);const amount=converted?.paid;
+  if(!converted||!Number.isFinite(amount)||amount<0){alert(es?'Ingresa un cargo y tipo de cambio válidos.':'Enter a valid fee and exchange rate.');return}
+  vehicle.moneyEntries={...(vehicle.moneyEntries||{}),loanDeathInsuranceFee:{currency:data.loanDeathInsuranceFeeCurrency,originalAmount:converted.paymentOriginalAmount,exchangeRate:converted.paymentExchangeRate}};
+  vehicle.loanDeathInsuranceFee=Math.round(amount*100)/100;vehicle.loanDeathInsuranceIncluded=data.loanDeathInsuranceIncluded==='yes';
+  save();document.querySelector('#modalRoot').innerHTML='';render();
+ };
+}
+
+function openLoanModal(title,content){
+ document.querySelector('#modalRoot').innerHTML='<div class="overlay"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="loan-modal-title"><h3 id="loan-modal-title">'+esc(title)+'</h3>'+content+'</section></div>';
+ document.querySelector('#loan-close').onclick=()=>{document.querySelector('#modalRoot').innerHTML=''};
+}
+function loanForm(id){
+ const es=db.language==='es';
+ if(!db.vehicles.length){alert(es?'Agrega un vehículo primero.':'Add a vehicle first.');return}
+ const vehicle=id?byId('vehicles',id):db.vehicles[0];if(!vehicle)return;
+ openLoanModal(es?'Detalles del préstamo':'Loan details','<form id="loan-form"><div class="fields">'+
+ pick(t('vehicle'),'loanVehicle',db.vehicles.map(v=>[v.id,vname(v)+' · '+v.plate]),vehicle.id)+
+ field(es?'Prestamista / Banco':'Lender / Bank','loanLender',vehicle.loanLender||'')+
+ pick(es?'Estado del préstamo':'Loan status','loanStatus',[['active',es?'Activo':'Active'],['paid_off',es?'Pagado':'Paid off']],vehicle.loanPaidOff?'paid_off':'active')+
+ field(es?'Saldo pendiente USD':'Outstanding balance USD','loan',vehicle.loan||0,'number','min="0" step="0.01" required')+
+ pick(es?'Cálculo del pago mensual':'Monthly payment calculation','loanPaymentMode',[['auto',es?'Calcular automáticamente':'Calculate automatically'],['manual',es?'Ingresar pago del banco':'Enter lender payment']],vehicle.loanPaymentMode||'auto')+
+ field(es?'Monto financiado USD':'Amount financed USD','loanOriginalPrincipal',vehicle.loanOriginalPrincipal??'','number','min="0.01" step="0.01"')+
+ field(es?'Tasa de interés anual (%)':'Annual interest rate (%)','loanAnnualInterestRate',vehicle.loanAnnualInterestRate??'','number','min="0" max="100" step="0.001"')+
+ field(es?'Plazo del préstamo (meses)':'Loan term (months)','loanTermMonths',vehicle.loanTermMonths??'','number','min="1" max="600" step="1"')+
+ field(es?'Cuota del préstamo / banco USD':'Loan / lender payment USD','loanPayment',vehicle.loanPayment||0,'number','min="0" step="0.01" required')+
+ field(es?'Seguro de vida / desgravamen mensual USD':'Monthly death insurance fee USD','loanDeathInsuranceFee',vehicle.loanDeathInsuranceFee??0,'number','min="0" step="0.01" required')+
+ pick(es?'Cobro del seguro de vida':'Death insurance billing','loanDeathInsuranceIncluded',[['no',es?'Se cobra aparte':'Charged separately'],['yes',es?'Ya incluido en la cuota':'Already included in loan payment']],vehicle.loanDeathInsuranceIncluded?'yes':'no')+
+ field(es?'Inicio del préstamo':'Loan start date','loanStartDate',vehicle.loanStartDate||'','date')+
+ field(es?'Próximo vencimiento':'Next payment due','loanNextDue',vehicle.loanNextDue||'','date')+
+ field(es?'Fecha final del préstamo':'Loan end date','loanEndDate',vehicle.loanEndDate||'','date')+
+ reviewField(t('notes'),'loanNotes',vehicle.loanNotes||'')+
+ '</div><p id="loan-calculation-help" class="help" role="status"></p><div id="loan-payment-breakdown" class="loan-payment-breakdown" role="status" aria-live="polite"></div><div class="foot"><button class="btn" type="button" id="loan-close">'+t('cancel')+'</button><button class="btn primary" type="submit">'+t('save')+'</button></div></form>');
+ const chooser=document.querySelector('#f_loanVehicle');if(id)chooser.disabled=true;
+ const calculationFields=['loanPaymentMode','loanOriginalPrincipal','loanAnnualInterestRate','loanTermMonths'];
+
+ const updateCalculation=()=>{
+  const get=key=>document.querySelector('#f_'+key);
+  const paidOff=get('loanStatus').value==='paid_off';
+  const automatic=get('loanPaymentMode').value==='auto'&&!paidOff;
+  get('loanPayment').readOnly=automatic||paidOff;
+  get('loanDeathInsuranceIncluded').disabled=automatic;
+  if(automatic)get('loanDeathInsuranceIncluded').value='no';
+  for(const key of calculationFields.slice(1)){get(key).required=automatic;get(key).disabled=!automatic}
+  const help=document.querySelector('#loan-calculation-help');
+  if(paidOff){
+   get('loanPayment').value=byId('vehicles',chooser.value)?.loanPayment||0;
+   help.textContent=es?'Este préstamo no se incluirá en el total mensual.':'This loan will be excluded from the monthly total.';
+  }else if(!automatic){
+   help.textContent=es?'Se usará la cuota del banco, más el seguro cobrado aparte. Si ya incluye el seguro, no se suma otra vez.':'Uses the lender payment plus insurance charged separately. Insurance already included is not added twice.';
+  }else{
+   const payment=calculateMonthlyLoanPayment(get('loanOriginalPrincipal').value,get('loanAnnualInterestRate').value,get('loanTermMonths').value);
+   get('loanPayment').value=payment===null?'':payment.toFixed(2);
+   help.textContent=payment===null?(es?'Completa monto financiado, tasa anual y plazo.':'Enter amount financed, annual rate, and term.'):(es?'Capital e intereses calculados a tasa fija. El total agrega el seguro de vida mensual. No incluye otros cargos ni pago final extraordinario.':'Principal and interest calculated at a fixed rate. The total adds monthly death insurance. Other fees and balloon payments are excluded.');
+  }
+  const rawPayment=get('loanPayment').value,rawFee=get('loanDeathInsuranceFee').value;
+  const payment=Number(rawPayment),fee=Number(rawFee),included=get('loanDeathInsuranceIncluded').value==='yes';
+  const valid=rawPayment!==''&&rawFee!==''&&Number.isFinite(payment)&&payment>=0&&Number.isFinite(fee)&&fee>=0;
+  const total=paidOff?0:valid?Math.round((payment+(included?0:fee))*100)/100:null;
+  document.querySelector('#loan-payment-breakdown').innerHTML=
+   '<div><span>'+(es?'Cuota del préstamo / banco':'Loan / lender payment')+'</span><strong>'+esc(rawPayment!==''&&Number.isFinite(payment)?usd(payment):'—')+'</strong></div>'+
+   '<div><span>'+(es?'Seguro de vida mensual':'Monthly death insurance')+(included?(es?' (ya incluido)':' (already included)'):'')+'</span><strong>'+esc(rawFee!==''&&Number.isFinite(fee)?usd(fee):'—')+'</strong></div>'+
+   '<div class="loan-payment-grand-total"><span>'+(es?'Pago mensual total':'Total monthly payment')+'</span><strong>'+esc(total===null?'—':usd(total))+'</strong></div>';
+ };
+ ['loanPayment','loanDeathInsuranceFee','loanDeathInsuranceIncluded'].forEach(key=>document.querySelector('#f_'+key).addEventListener('input',updateCalculation));
+ document.querySelector('#f_loanDeathInsuranceIncluded').addEventListener('change',updateCalculation);
+ document.querySelector('#f_loanStatus').addEventListener('change',updateCalculation);
+ calculationFields.forEach(key=>document.querySelector('#f_'+key).addEventListener('input',updateCalculation));
+ document.querySelector('#f_loanPaymentMode').addEventListener('change',()=>{
+  if(document.querySelector('#f_loanPaymentMode').value==='manual'&&!document.querySelector('#f_loanPayment').value)document.querySelector('#f_loanPayment').value=byId('vehicles',chooser.value)?.loanPayment||0;
+  updateCalculation();
+ });
+ updateCalculation();
+ chooser.onchange=()=>{const v=byId('vehicles',chooser.value);if(!v)return;for(const key of ['loanLender','loan','loanPayment','loanStartDate','loanNextDue','loanEndDate','loanNotes','loanOriginalPrincipal','loanAnnualInterestRate','loanTermMonths','loanPaymentMode','loanDeathInsuranceFee'])document.querySelector('#f_'+key).value=v[key]??(key==='loanPaymentMode'?'auto':['loan','loanPayment'].includes(key)?0:'');document.querySelector('#f_loanStatus').value=v.loanPaidOff?'paid_off':'active';document.querySelector('#f_loanDeathInsuranceFee').value=v.loanDeathInsuranceFee??0;document.querySelector('#f_loanDeathInsuranceIncluded').value=v.loanDeathInsuranceIncluded?'yes':'no';updateCalculation()};
+ document.querySelector('#loan-form').onsubmit=event=>{
+  event.preventDefault();const v=byId('vehicles',chooser.value);if(!v)return;
+  const values=Object.fromEntries(new FormData(event.currentTarget).entries());
+  const automatic=values.loanPaymentMode==='auto'&&values.loanStatus!=='paid_off';
+  const computed=automatic?calculateMonthlyLoanPayment(values.loanOriginalPrincipal,values.loanAnnualInterestRate,values.loanTermMonths):null;
+  if(automatic&&computed===null){alert(es?'Completa los datos para calcular el pago mensual.':'Complete the loan calculation details.');return}
+  const balance=Number(values.loan),payment=automatic?computed:Number(values.loanPayment);
+  const deathFee=Number(values.loanDeathInsuranceFee);
+  if(values.loanDeathInsuranceFee===''||!Number.isFinite(deathFee)||deathFee<0){alert(es?'Ingresa un cargo de seguro válido.':'Enter a valid insurance fee.');return}
+  if(!Number.isFinite(balance)||balance<0||!Number.isFinite(payment)||payment<0){alert(es?'Revisa los importes.':'Check the amounts.');return}
+  if(values.loanStatus==='paid_off'&&balance>0){alert(es?'Un préstamo pagado debe tener saldo cero.':'A paid-off loan must have a zero balance.');return}
+  if(values.loanStartDate&&values.loanEndDate&&values.loanEndDate<values.loanStartDate){alert(es?'La fecha final no puede ser anterior al inicio.':'End date cannot be before the start date.');return}
+  Object.assign(v,{loan:balance,loanPayment:payment,loanLender:String(values.loanLender||'').trim(),loanStartDate:values.loanStartDate||'',loanNextDue:values.loanNextDue||'',loanEndDate:values.loanEndDate||'',loanNotes:String(values.loanNotes||'').trim()});
+  v.loanDeathInsuranceFee=Math.round(deathFee*100)/100;v.loanDeathInsuranceIncluded=!automatic&&values.loanDeathInsuranceIncluded==='yes';
+  v.loanPaidOff=values.loanStatus==='paid_off';v.loanPaymentMode=values.loanPaymentMode;
+  if(automatic){v.loanOriginalPrincipal=Number(values.loanOriginalPrincipal);v.loanAnnualInterestRate=Number(values.loanAnnualInterestRate);v.loanTermMonths=Number(values.loanTermMonths)}
+  if(balance>0)v.ownership='financed';
+  save();document.querySelector('#modalRoot').innerHTML='';render();
+ };
+}
+function loanPaymentForm(id){
+ const v=byId('vehicles',id),es=db.language==='es';if(!v||Number(v.loan||0)<=0)return;
+ openLoanModal(es?'Registrar pago del préstamo':'Record loan payment','<p class="help">'+esc(vname(v))+' · '+esc(v.plate)+'<br>'+(es?'Saldo pendiente: ':'Outstanding balance: ')+usd(v.loan)+'</p><form id="loan-payment-form"><div class="fields">'+
+ field(es?'Fecha del pago':'Payment date','date',new Date().toISOString().slice(0,10),'date','required')+
+ moneyField(es?'Pago total USD':'Total payment USD','amount',scheduledLoanCost(v)||'','min="0.01" step="0.01" required')+
+ moneyField(es?'Capital pagado USD':'Principal paid USD','principal','','min="0" step="0.01" required')+
+ field(es?'Próximo vencimiento (opcional)':'Next due date (optional)','nextDue',v.loanNextDue||'','date')+
+ reviewField(t('notes'),'notes','')+'</div><p class="help">'+(es?'El capital reduce el saldo. La diferencia entre el pago total y el capital se registra como intereses y cargos.':'Principal reduces the balance. The difference between the total payment and principal is recorded as interest and fees.')+'</p><div class="foot"><button class="btn" type="button" id="loan-close">'+t('cancel')+'</button><button class="btn primary" type="submit">'+(es?'Registrar pago':'Record payment')+'</button></div></form>');
+ document.querySelector('#loan-payment-form').onsubmit=event=>{
+  event.preventDefault();const data=Object.fromEntries(new FormData(event.currentTarget).entries());
+  try{for(const name of ['amount','principal']){const converted=window.GoCurrency.convert(data[name],data[name+'Currency'],data[name+'ExchangeRate']);if(!converted)throw Error(es?'Revisa el monto y tipo de cambio.':'Check amount and exchange rate.');data[name]=converted.paid;data[name+'Original']={currency:data[name+'Currency'],originalAmount:converted.paymentOriginalAmount,exchangeRate:converted.paymentExchangeRate}}recordLoanPayment(v,data);save();document.querySelector('#modalRoot').innerHTML='';render()}catch(error){alert(error.message)}
+ };
+}
+function recordLoanPayment(vehicle,data){
+ const es=db.language==='es',amount=Math.round(Number(data.amount)*100),principal=Math.round(Number(data.principal)*100),balance=Math.round(Number(vehicle.loan||0)*100);
+ if(!data.date||data.amount===''||data.principal===''||!Number.isFinite(amount)||!Number.isFinite(principal)||amount<=0||principal<0||principal>amount||principal>balance)throw Error(es?'Revisa el pago y el capital. El capital no puede superar el pago ni el saldo pendiente.':'Check payment and principal. Principal cannot exceed the payment or outstanding balance.');
+ const entry={id:uid(),date:data.date,amount:amount/100,principal:principal/100,interestFees:(amount-principal)/100,balanceAfter:(balance-principal)/100,notes:String(data.notes||'').trim(),moneyEntries:{amount:data.amountOriginal||null,principal:data.principalOriginal||null}};
+ vehicle.loanPayments=[...(Array.isArray(vehicle.loanPayments)?vehicle.loanPayments:[]),entry];vehicle.loan=entry.balanceAfter;if(entry.balanceAfter===0&&principal>0)vehicle.loanPaidOff=true;
+ if(data.nextDue)vehicle.loanNextDue=data.nextDue;
+}
+function loanHistory(id){
+ const v=byId('vehicles',id),es=db.language==='es';if(!v)return;
+ const history=[...(Array.isArray(v.loanPayments)?v.loanPayments:[])].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ openLoanModal(es?'Historial de pagos':'Payment history','<p class="help">'+esc(vname(v))+' · '+esc(v.plate)+'</p>'+table([es?'Fecha':'Date',es?'Pago total':'Payment',es?'Capital':'Principal',es?'Intereses / cargos':'Interest / fees',es?'Saldo después':'Balance after',t('notes')],history.map(p=>'<tr><td>'+esc(p.date)+'</td><td>'+usd(p.amount)+'</td><td>'+usd(p.principal)+'</td><td>'+usd(p.interestFees)+'</td><td>'+usd(p.balanceAfter)+'</td><td>'+esc(p.notes)+'</td></tr>').join(''))+'<div class="foot"><button class="btn" type="button" id="loan-close">'+(es?'Cerrar':'Close')+'</button></div>');
+}
+
+
+const vehiclePhotoURLs=new Map();
+function representativeVehiclePhoto(vehicle){
+ const make=String(vehicle.make||'').toLowerCase(),model=String(vehicle.model||'').toLowerCase(),year=Number(vehicle.year||0);
+ if(make.includes('toyota')&&model.includes('corolla'))return 'https://commons.wikimedia.org/wiki/Special:FilePath/2019-2022_Toyota_Corolla.jpg?width=600';
+ if(make.includes('hyundai')&&model.includes('tucson'))return year>=2023?'https://upload.wikimedia.org/wikipedia/commons/0/0c/2023_Hyundai_Tucson_Signature_%28India%29_front_view.jpg':'https://upload.wikimedia.org/wikipedia/commons/7/75/2021_Hyundai_Tucson_Ultimate_T-GDi_MHEV_1.6.jpg';
+ if(make.includes('mitsubishi')&&model.includes('sportero'))return 'https://automart.ph/_next/image?q=75&url=https%3A%2F%2Fautomart-dev.sgp1.digitaloceanspaces.com%2Fnaw1495%2Fused-Mitsubishi-Strada-naw1495-343515.jpg&w=2720';
+ if(make.includes('mitsubishi')&&model.includes('l200'))return 'https://img.ovoiture.ma/vehicles/mitsubishi/l200/01.jpg';
+ if(make.includes('toyota')&&model.includes('raize'))return 'https://toyotaninhbinhvn.com/wp-content/uploads/2025/01/z6203442886156_ee4c57cefccc06f19e90c3b1f98ab7bf.jpg?v=1736175789';
+ return '';
+}
+function vehiclePhotoHTML(vehicle){
+ const es=db.language==='es',example=vehicle.photoPath?'':representativeVehiclePhoto(vehicle);
+ const image=vehicle.photoPath?'<img data-vehicle-photo-path="'+esc(vehicle.photoPath)+'" alt="'+esc(vname(vehicle))+'" width="128" height="96" hidden>':example?'<img src="'+esc(example)+'" loading="lazy" referrerpolicy="no-referrer" alt="'+esc(vname(vehicle))+' — '+(es?'imagen de referencia':'reference image')+'" width="128" height="96" onload="this.hidden=false;this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" hidden>':'';
+ return '<div class="vehicle-photo-block"><div class="vehicle-photo-frame">'+image+'<span class="vehicle-photo-placeholder" aria-hidden="true">'+navIcon('vehicles')+'</span></div>'+(example?'<span class="vehicle-reference-label">'+(es?'Imagen de referencia, no es el vehículo real':'Reference photo, not the actual vehicle')+'</span>':'')+'<button class="mini" data-action="vehicle-photo" data-id="'+esc(vehicle.id)+'">'+(vehicle.photoPath?(es?'Cambiar foto':'Change photo'):(es?'Subir foto real':'Upload actual photo'))+'</button><input id="vehicle-photo-file" type="file" accept="image/jpeg,image/png,image/webp" data-vehicle-id="'+esc(vehicle.id)+'" hidden><span id="vehicle-photo-feedback" class="help" role="status"></span></div>';
+}
+async function hydrateVehiclePhotos(){
+ for(const image of document.querySelectorAll('img[data-vehicle-photo-path]')){
+  const path=image.dataset.vehiclePhotoPath;
+  if(!path||!goReady)continue;
+  try{
+   let cached=vehiclePhotoURLs.get(path);
+   if(!cached||cached.expires<Date.now()){
+    const {data,error}=await goClient.storage.from('go-rental-photos').createSignedUrl(path,3600);
+    if(error)throw error;cached={url:data.signedUrl,expires:Date.now()+3000000};vehiclePhotoURLs.set(path,cached);
+   }
+   image.onload=()=>{image.hidden=false;if(image.nextElementSibling)image.nextElementSibling.hidden=true};
+   image.onerror=()=>{image.hidden=true;if(image.nextElementSibling)image.nextElementSibling.hidden=false};
+   image.src=cached.url;
+  }catch{const message=document.querySelector('#vehicle-photo-feedback');if(message)message.textContent=db.language==='es'?'No se pudo cargar la foto.':'Photo could not be loaded.'}
+ }
+}
+document.addEventListener('change',event=>{
+ if(event.target.id==='report-month-select'){reportSelectedMonth=event.target.value;render();return}
+ if(event.target.id==='vehicle-photo-file')void uploadVehiclePhoto(event.target);
+});
+async function uploadVehiclePhoto(input){
+ const vehicle=byId('vehicles',input.dataset.vehicleId),file=input.files?.[0],es=db.language==='es';
+ if(!vehicle||!file)return;
+ const feedback=document.querySelector('#vehicle-photo-feedback');
+ const types={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+ if(!types[file.type]||file.size>5*1024*1024){feedback.textContent=es?'Selecciona una foto JPG, PNG o WebP de hasta 5 MB.':'Choose a JPG, PNG, or WebP photo up to 5 MB.';input.value='';return}
+ input.disabled=true;feedback.textContent=es?'Guardando foto…':'Saving photo…';
+ try{
+  await goQueue.catch(()=>{});if(goFailed)throw Error(es?'Guarda los cambios pendientes primero.':'Save pending changes first.');
+  const path=goOwnerId+'/vehicles/'+vehicle.id+'/'+uid()+'.'+types[file.type];
+  const {error}=await goClient.storage.from('go-rental-photos').upload(path,file,{contentType:file.type,upsert:false});
+  if(error)throw error;
+  vehicle.photoPath=path;save();await goQueue;
+  render();
+ }catch(error){feedback.textContent=(es?'No se pudo guardar: ':'Could not save: ')+error.message}
+ finally{input.disabled=false;input.value=''}
+}
+
+function fleetDirectoryHTML(compact=false){
+ const es=db.language==='es',vehicle=selectedVehicleId&&!compact?byId('vehicles',selectedVehicleId):null;
+ const normalize=value=>String(value||'').toLocaleLowerCase(es?'es':'en').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ if(!vehicle){
+  if(!compact)selectedVehicleId=null;
+  const vehicles=[...db.vehicles].filter(v=>normalize([v.make,v.model,v.year,v.plate].join(' ')).includes(normalize(fleetSearch))).sort((a,b)=>normalize(a.make+' '+a.model).localeCompare(normalize(b.make+' '+b.model),es?'es':'en',{numeric:true})||Number(a.year)-Number(b.year)||String(a.plate||'').localeCompare(String(b.plate||'')));
+  return '<section class="panel customer-directory"><div class="section-head"><h3>'+t(compact?'fleet':'vehicles')+'</h3><div class="actions"><button class="btn" data-action="fleet-search" aria-expanded="'+fleetSearchOpen+'" aria-controls="fleet-search-panel">'+(es?'Buscar':'Search')+'</button><button class="btn primary" data-action="new" data-kind="vehicle">+ '+t('add')+'</button></div></div>'+
+  '<form id="fleet-search-panel" class="customer-search'+(fleetSearchOpen?'':' hide')+'" role="search"><label for="fleet-search-input">'+(es?'Vehículo o placa':'Vehicle or license plate')+'</label><div class="actions"><input id="fleet-search-input" type="search" autocomplete="off" value="'+esc(fleetSearch)+'" placeholder="'+(es?'Buscar vehículo o placa…':'Search vehicle or plate…')+'"><button class="btn primary" type="submit">'+(es?'Buscar':'Search')+'</button><button class="btn" type="button" data-action="fleet-search-clear">'+(es?'Limpiar':'Clear')+'</button></div></form>'+
+  (vehicles.length?'<div class="fleet-card-grid">'+vehicles.map(v=>{
+    const reference=v.photoPath?'':representativeVehiclePhoto(v);
+    const image=v.photoPath?'<img data-vehicle-photo-path="'+esc(v.photoPath)+'" alt="'+esc(vname(v))+'" loading="lazy" hidden>':reference?'<img src="'+esc(reference)+'" loading="lazy" referrerpolicy="no-referrer" alt="'+esc(vname(v))+'" onload="this.hidden=false;this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" hidden>':'';
+    const photo='<div class="fleet-card-photo">'+image+'<span class="fleet-card-fallback" aria-hidden="true">🚗</span></div>';
+    return '<button type="button" class="fleet-card" data-action="vehicle-profile" data-id="'+esc(v.id)+'">'+photo+'<span class="fleet-card-content"><strong>'+esc(vname(v))+'</strong><span class="fleet-card-plate">'+(es?'Placa: ':'Plate: ')+esc(v.plate||'—')+'</span>'+(reference?'<small class="fleet-card-reference">'+(es?'Foto de referencia':'Reference photo')+'</small>':'')+'<span class="fleet-card-link">'+(es?'Ver perfil':'View profile')+' →</span></span></button>';
+   }).join('')+'</div>':'<div class="empty">'+(fleetSearch?(es?'No se encontraron vehículos.':'No vehicles found.'):t('noRecords'))+'</div>')+'</section>';
  }
  const rentals=db.rentals.filter(r=>r.vehicleId===vehicle.id).sort((a,b)=>String(b.pickup||'').localeCompare(String(a.pickup||'')));
  const expenses=db.expenses.filter(e=>e.vehicleId===vehicle.id).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
@@ -389,7 +614,9 @@ function fleetDirectoryHTML(compact=false){
  const rows=rentals.map(r=>'<tr><td>'+esc(byId('customers',r.customerId)?.name||'—')+'</td><td>'+esc(r.pickup)+' '+esc(formatTime(r.pickupTime))+' → '+esc(r.dropoff)+' '+esc(formatTime(r.dropoffTime))+'</td><td>'+esc(({reserved:es?'Reservado':'Reserved',rented:es?'Alquilado':'Rented',returned:es?'Devuelto':'Returned'})[r.status]||r.status)+'</td><td>'+usd(r.total)+'</td><td><button class="mini" data-action="photos" data-id="'+esc(r.id)+'">'+(es?'Fotos':'Pictures')+'</button><button class="mini" data-action="edit" data-kind="rental" data-id="'+esc(r.id)+'">'+t('edit')+'</button></td></tr>').join('');
  return '<div class="customer-profile"><div class="customer-profile-toolbar"><button class="btn" data-action="fleet-back">← '+(es?'Volver a vehículos':'Back to vehicles')+'</button><div>'+act('vehicle',esc(vehicle.id))+'</div></div>'+
  '<section class="panel"><div class="profile-heading">'+vehiclePhotoHTML(vehicle)+'<div><p class="profile-eyebrow">'+(es?'Perfil del vehículo':'Vehicle profile')+'</p><h2>'+esc(vname(vehicle))+'</h2></div></div><dl class="customer-contact">'+detail(t('plate'),vehicle.plate)+detail(es?'Color':'Color',vehicle.color||'—')+detail(t('category'),categoryName(vehicle.category))+detail(t('rate'),usd(vehicleRate(vehicle)))+detail(t('insurance'),usd(vehicle.insurance))+detail(es?'Número de póliza':'Insurance policy number',vehicle.insurancePolicyNumber||'—')+detail(es?'Inicio de la póliza de seguro':'Insurance policy starts',vehicle.insuranceStartDate||'—')+detail(es?'Vencimiento de la póliza de seguro':'Insurance policy expires',vehicle.insuranceExpiryDate||'—')+detail(es?'Saldo del préstamo':'Loan balance',usd(vehicle.loan))+detail(es?'Pago mensual del préstamo':'Monthly loan payment',usd(vehicle.loanPayment))+detail(es?'Propiedad':'Ownership',vehicle.ownership==='owned'?(es?'Propio':'Owned'):vehicle.ownership||'—')+'</dl></section>'+
- '<div class="actions loan-view-tabs" role="group" aria-label="'+(es?'Secciones del vehículo':'Vehicle sections')+'">'+[['overview',es?'Resumen':'Overview'],['history',es?'Historial':'History'],['loans',es?'Préstamos':'Loans']].map(([tab,label])=>'<button class="btn'+(selectedVehicleTab===tab?' primary':'')+'" data-action="vehicle-tab" data-tab="'+tab+'" aria-pressed="'+(selectedVehicleTab===tab)+'">'+label+'</button>').join('')+'</div>'+
+ '<div class="actions loan-view-tabs" role="group" aria-label="'+(es?'Secciones del vehículo':'Vehicle sections')+'">'+[['overview',es?'Resumen':'Overview'],['history',es?'Historial':'History'],['loans',es?'Préstamos':'Loans']].map(([tab,label])=>'<button class="btn'+(selectedVehicleTab===tab?' primary':'')+'" data-action="vehicle-tab" data-tab="'+tab+'" aria-pressed="'+(selectedVehicleTab===tab)+'">'+label+'</button>').join('')+'</div>'++'</div><div class="fleet-profile-actions">'+act('vehicle',esc(vehicle.id))+'</div></div>'+
+ '<section class="panel"><div class="profile-heading">'+vehiclePhotoHTML(vehicle)+'<div><p class="profile-eyebrow">'+(es?'Perfil del vehículo':'Vehicle profile')+'</p><h2>'+esc(vname(vehicle))+'</h2></div></div><dl class="customer-contact">'+detail(t('plate'),vehicle.plate)+detail(es?'Color':'Color',vehicle.color||'—')+detail(t('category'),categoryName(vehicle.category))+detail(t('rate'),usd(vehicleRate(vehicle)))+detail(t('insurance'),usd(vehicle.insurance))+detail(es?'Número de póliza':'Insurance policy number',vehicle.insurancePolicyNumber||'—')+detail(es?'Inicio de la póliza de seguro':'Insurance policy starts',vehicle.insuranceStartDate||'—')+detail(es?'Vencimiento de la póliza de seguro':'Insurance policy expires',vehicle.insuranceExpiryDate||'—')+detail(es?'Saldo del préstamo':'Loan balance',usd(vehicle.loan))+detail(es?'Pago mensual del préstamo':'Monthly loan payment',usd(vehicle.loanPayment))+detail(es?'Propiedad':'Ownership',vehicle.ownership==='owned'?(es?'Propio':'Owned'):vehicle.ownership||'—')+'</dl></section>'+
+
  (selectedVehicleTab==='loans'?vehicleLoanPanel():selectedVehicleTab==='overview'?
  '<section class="panel"><h3>'+(es?'Actividad del vehículo':'Vehicle activity')+'</h3><div class="customer-metrics"><div><span>'+(es?'Alquileres registrados':'Recorded rentals')+'</span><strong>'+rentals.length+'</strong></div><div><span>'+(es?'Cargos de alquiler':'Rental charges')+'</span><strong>'+usd(rentals.reduce((sum,r)=>sum+Number(r.total||0),0))+'</strong></div><div><span>'+(es?'Gastos registrados':'Recorded expenses')+'</span><strong>'+usd(expenses.reduce((sum,e)=>sum+Number(e.amount||0),0))+'</strong></div></div><p class="help">'+(es?'Los cargos no incluyen alquileres eliminados. Los gastos no incluyen seguro ni pagos de préstamos.':'Charges exclude deleted rentals. Expenses exclude insurance and loan payments.')+'</p></section>': 
  '<section class="panel"><h3>'+(es?'Historial de alquileres':'Rental history')+'</h3>'+table([t('customer'),t('dates'),t('status'),t('amount'),t('actions')],rows)+'</section>'+

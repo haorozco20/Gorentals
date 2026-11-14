@@ -333,6 +333,7 @@ async function hydrateVehiclePhotos(){
  }
 }
 document.addEventListener('change',event=>{
+ if(event.target.id==='report-month-select'){reportSelectedMonth=event.target.value;render();return}
  if(event.target.id==='vehicle-photo-file')void uploadVehiclePhoto(event.target);
 });
 async function uploadVehiclePhoto(input){
@@ -451,10 +452,11 @@ function customerDirectoryHTML(){
 }
 
 
+let reportSelectedMonth='';
 function extendedReportsHTML(){
  const es=db.language==='es',rentals=db.rentals||[],expenses=db.expenses||[],vehicles=db.vehicles||[],customers=db.customers||[];
  const num=n=>Number(n)||0, sum=(arr,fn)=>arr.reduce((n,x)=>n+num(fn(x)),0);
- const current=month, monthly=rentals.filter(r=>String(r.pickup||'').slice(0,7)===current);
+ const current=reportSelectedMonth||month, monthly=rentals.filter(r=>String(r.pickup||'').slice(0,7)===current);
  const monthlyExpense=expenses.filter(e=>String(e.date||'').slice(0,7)===current);
  const allCharges=sum(rentals,r=>r.total),allPaid=sum(rentals,r=>r.paid),allExpenses=sum(expenses,e=>e.amount);
  const mCharges=sum(monthly,r=>r.total),mPaid=sum(monthly,r=>r.paid),mExpenses=sum(monthlyExpense,e=>e.amount);
@@ -465,6 +467,29 @@ function extendedReportsHTML(){
  const section=(name,summary,inner,open)=>'<details class="panel"'+(open?' open':'')+' style="margin-bottom:16px"><summary style="cursor:pointer;padding:4px 0;list-style-position:inside"><strong style="font-size:1.1rem">'+esc(name)+'</strong><span style="display:block;margin:5px 0 0 22px;color:var(--muted,#64748b);font-size:.9rem">'+esc(summary)+'</span></summary><div style="padding-top:18px">'+inner+'</div></details>';
  const h=(title)=>'<h3 style="margin:18px 0 10px">'+esc(title)+'</h3>';
  const bar=(label,value,max)=>'<div style="display:grid;grid-template-columns:minmax(90px,1fr) 3fr auto;align-items:center;gap:9px;margin:10px 0"><span>'+esc(label)+'</span><div style="height:11px;border-radius:8px;background:#e5e7eb;overflow:hidden"><div style="height:100%;background:#32865c;width:'+Math.min(100,Math.max(0,max?value/max*100:0))+'%"></div></div><strong>'+usd(value)+'</strong></div>';
+ const monthTotal=(key)=>{const rr=rentals.filter(r=>String(r.pickup||'').slice(0,7)===key),ee=expenses.filter(e=>String(e.date||'').slice(0,7)===key);return {charges:sum(rr,r=>r.total),paid:sum(rr,r=>r.paid),expenses:sum(ee,e=>e.amount),count:rr.length}};
+ const moveMonth=(key,delta)=>{const [y,m]=key.split('-').map(Number);return new Date(Date.UTC(y,m-1+delta,1)).toISOString().slice(0,7)};
+ const previous=monthTotal(moveMonth(current,-1)),selected=monthTotal(current);
+ const change=(now,before)=>before?((now-before)/Math.abs(before)*100).toFixed(1)+'%':(now?'—':'0%');
+ const compare=(name,now,before,money=true)=>'<tr><td>'+esc(name)+'</td><td>'+ (money?usd(now):now)+'</td><td>'+(money?usd(before):before)+'</td><td>'+esc(change(now,before))+'</td></tr>';
+ const reportMonths=Array.from({length:6},(_,i)=>moveMonth(current,i-5));
+ const trend=reportMonths.map(key=>({key,...monthTotal(key)}));
+ const trendMax=Math.max(1,...trend.flatMap(x=>[x.charges,x.expenses]));
+ const performanceMonth='<section style="margin-top:22px"><h3>'+(es?'Rendimiento mensual':'Monthly Performance')+'</h3>'+
+ '<label style="display:block;margin:12px 0">'+(es?'Seleccionar mes':'Select month')+' <input type="month" id="report-month-select" value="'+esc(current)+'" max="'+esc(month)+'" style="padding:8px;border:1px solid #cbd5e1;border-radius:8px"></label>'+
+ '<div class="cards">'+metric(es?'Alquileres':'Rentals',String(selected.count),current)+metric(es?'Cargos':'Rental charges',usd(selected.charges),current)+metric(es?'Gastos registrados':'Recorded expenses',usd(selected.expenses),current)+metric(es?'Resultado estimado':'Estimated result',usd(selected.charges-selected.expenses-mInsurance-mLoan),es?'Antes de otros costos':'Before other costs')+'</div>'+
+ h(es?'Comparación con el mes anterior':'Compared with previous month')+
+ table([es?'Indicador':'Metric',current,moveMonth(current,-1),es?'Cambio':'Change'],[
+ compare(es?'Alquileres':'Rentals',selected.count,previous.count,false),
+ compare(es?'Cargos':'Rental charges',selected.charges,previous.charges),
+ compare(es?'Pagos registrados':'Recorded payments',selected.paid,previous.paid),
+ compare(es?'Gastos':'Expenses',selected.expenses,previous.expenses),
+ compare(es?'Resultado estimado':'Estimated result',selected.charges-selected.expenses-mInsurance-mLoan,previous.charges-previous.expenses-mInsurance-mLoan)
+ ].join(''))+
+ h(es?'Tendencia de los últimos seis meses':'Six-month trend')+
+ trend.map(x=>'<div style="margin:14px 0"><strong>'+esc(x.key)+'</strong><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:5px">'+
+ '<div><small>'+(es?'Cargos':'Charges')+'</small>'+bar('',x.charges,trendMax)+'</div><div><small>'+(es?'Gastos':'Expenses')+'</small>'+bar('',x.expenses,trendMax)+'</div></div></div>').join('')+
+ '<p class="help">'+(es?'Los cargos se asignan al mes de entrega y los gastos según su fecha. Los pagos pueden haberse recibido en otro mes. El resultado estimado resta seguros y préstamos programados, pero no es utilidad neta contable.':'Rental charges use pickup month and expenses use their recorded date. Payments may have been collected in a different month. Estimated result subtracts scheduled fleet insurance and loans, but is not accounting net profit.')+'</p></section>';
  const finance='<div class="cards">'+metric(es?'Cargos del mes':'Monthly rental charges',usd(mCharges),current)+metric(es?'Pagos registrados':'Recorded payments',usd(mPaid),current)+metric(es?'Gastos del mes':'Monthly expenses',usd(mExpenses),current)+metric(es?'Saldo pendiente total':'Outstanding rental balance',usd(openBalance),es?'Todos los alquileres':'All rentals')+'</div>'+
  h(es?'Ingresos frente a gastos':'Revenue versus expenses')+bar(es?'Cargos':'Charges',mCharges,Math.max(mCharges,mExpenses,1))+bar(es?'Gastos':'Expenses',mExpenses,Math.max(mCharges,mExpenses,1))+
  table([es?'Indicador':'Metric',es?'Este mes':'This month',es?'Todos los registros':'All records'],[
@@ -477,7 +502,7 @@ function extendedReportsHTML(){
  '<tr><td>'+(es?'Pagos mensuales de préstamos y seguro de vida':'Monthly scheduled loans and death insurance')+'</td><td>'+usd(mLoan)+'</td><td>—</td></tr>',
  '<tr><td><strong>'+(es?'Estimación mensual antes de otros costos':'Monthly illustration before other costs')+'</strong></td><td><strong>'+usd(mCharges-mExpenses-mInsurance-mLoan)+'</strong></td><td>—</td></tr>'
  ].join(''))+
- '<p class="help">'+(es?'Los cargos se agrupan según el mes de entrega; los pagos no necesariamente ingresaron ese mes. La estimación no es utilidad neta contable ni incluye costos no registrados.':'Charges are grouped by pickup month; payments may have been received at different dates. This is not accounting net profit and may exclude unrecorded costs.')+'</p>';
+ '<p class="help">'+(es?'Los cargos se agrupan según el mes de entrega; los pagos no necesariamente ingresaron ese mes. La estimación no es utilidad neta contable ni incluye costos no registrados.':'Charges are grouped by pickup month; payments may have been received at different dates. This is not accounting net profit and may exclude unrecorded costs.')+'</p>'+performanceMonth;
  const vehicleRows=vehicles.map(v=>{
   const vr=rentals.filter(r=>r.vehicleId===v.id),ve=expenses.filter(e=>e.vehicleId===v.id);
   const charges=sum(vr,r=>r.total),paid=sum(vr,r=>r.paid),cost=sum(ve,e=>e.amount),rentalDays=sum(vr,r=>r.pickup&&r.dropoff?days(r.pickup,r.dropoff):0);

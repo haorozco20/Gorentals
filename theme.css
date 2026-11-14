@@ -326,3 +326,14 @@ body>main #auth{max-width:520px;margin:40px auto}
 @media(prefers-color-scheme:dark){
  .fleet-card-photo,.rental-vehicle-icon,.vehicle-photo-frame{background:transparent}
 }
+
+/* Customer suggestions update without interrupting typing. */
+.customer-search-suggestions{max-width:640px;display:grid;gap:5px;margin-top:8px}
+.customer-search-suggestions:empty{display:none}
+.customer-suggestion{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;width:100%;padding:11px 14px;text-align:left;font:inherit;color:var(--ink,#101828);background:var(--card,#fff);border:1px solid var(--line,#e4e7ec);border-radius:9px;cursor:pointer}
+.customer-suggestion strong{font-size:14px;overflow-wrap:anywhere}
+.customer-suggestion span{font-size:12px;color:var(--muted,#667085);overflow-wrap:anywhere}
+.customer-suggestion span:nth-child(2){grid-column:1}
+.customer-suggestion span:last-child{grid-column:2;grid-row:1 / span 2;align-self:center}
+.customer-suggestion:hover,.customer-suggestion:focus-visible{border-color:#8090ff;outline:2px solid #8090ff;outline-offset:1px}
+@media(prefers-color-scheme:dark){.customer-suggestion{background:#202d40;color:#f8fafc;border-color:#455469}.customer-suggestion span{color:#bdc8d9}}

@@ -466,6 +466,32 @@ function rentalDirectoryHTML(){
  '</dl><div class="profile-notes"><h3>'+t('notes')+'</h3><p>'+esc(r.notes||(es?'Sin notas.':'No notes.'))+'</p></div></section></div>';
 }
 
+
+function customerSuggestionsHTML(value){
+ const es=db.language==='es',locale=es?'es':'en';
+ const normalize=text=>String(text||'').trim().toLocaleLowerCase(locale).normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ const query=normalize(value);
+ if(!query)return '';
+ const matches=db.customers.filter(c=>normalize(c.name).includes(query)).sort((a,b)=>Number(normalize(b.name).startsWith(query))-Number(normalize(a.name).startsWith(query))||String(a.name||'').localeCompare(String(b.name||''),locale,{sensitivity:'base',numeric:true})||String(a.id).localeCompare(String(b.id)));
+ return '<p class="help" role="status">'+(matches.length?(es?'Clientes sugeridos':'Suggested customers')+' ('+Math.min(matches.length,8)+(matches.length>8?' / '+matches.length:'')+')':(es?'No se encontraron clientes.':'No customers found.'))+'</p>'+matches.slice(0,8).map(c=>'<button type="button" class="customer-suggestion" data-action="customer-profile" data-id="'+esc(c.id)+'"><strong>'+esc(c.name||'')+'</strong><span>'+esc(c.phone||c.email||'')+'</span><span aria-hidden="true">→</span></button>').join('');
+}
+document.addEventListener('input',event=>{
+ if(event.target.id!=='customer-search-input')return;
+ const suggestions=document.querySelector('#customer-search-suggestions');
+ if(suggestions)suggestions.innerHTML=customerSuggestionsHTML(event.target.value);
+});
+document.addEventListener('keydown',event=>{
+ if(event.target.id==='customer-search-input'&&event.key==='ArrowDown'){
+  const first=document.querySelector('#customer-search-suggestions button');
+  if(first){event.preventDefault();first.focus()}
+ }
+ if(event.target.closest('#customer-search-panel')&&event.key==='Escape'){
+  const suggestions=document.querySelector('#customer-search-suggestions');
+  if(suggestions)suggestions.innerHTML='';
+  document.querySelector('#customer-search-input')?.focus();
+ }
+});
+
 function customerDirectoryHTML(){
  const es=db.language==='es';
  const customer=selectedCustomerId?byId('customers',selectedCustomerId):null;
@@ -473,7 +499,7 @@ function customerDirectoryHTML(){
   selectedCustomerId=null;
   const customers=[...db.customers].filter(c=>String(c.name||'').toLocaleLowerCase(es?'es':'en').normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(customerSearch.toLocaleLowerCase(es?'es':'en').normalize('NFD').replace(/[\u0300-\u036f]/g,''))).sort((a,b)=>String(a.name||'').trim().localeCompare(String(b.name||'').trim(),es?'es':'en',{sensitivity:'base',numeric:true})||String(a.id).localeCompare(String(b.id)));
   return '<section class="panel customer-directory"><div class="section-head"><h3>'+t('customers')+'</h3><div class="actions"><button class="btn" data-action="customer-search" aria-expanded="'+customerSearchOpen+'" aria-controls="customer-search-panel">'+(es?'Buscar':'Search')+'</button><button class="btn primary" data-action="new" data-kind="customer">+ '+t('add')+'</button></div></div>'+
-   '<form id="customer-search-panel" class="customer-search'+(customerSearchOpen?'':' hide')+'" role="search"><label for="customer-search-input">'+(es?'Nombre del cliente':'Customer name')+'</label><div class="actions"><input id="customer-search-input" type="search" autocomplete="off" value="'+esc(customerSearch)+'" placeholder="'+(es?'Buscar por nombre…':'Search by name…')+'"><button class="btn primary" type="submit">'+(es?'Buscar':'Search')+'</button><button class="btn" type="button" data-action="customer-search-clear">'+(es?'Limpiar':'Clear')+'</button></div></form>'+
+   '<form id="customer-search-panel" class="customer-search'+(customerSearchOpen?'':' hide')+'" role="search"><label for="customer-search-input">'+(es?'Nombre del cliente':'Customer name')+'</label><div class="actions"><input id="customer-search-input" type="search" autocomplete="off" aria-controls="customer-search-suggestions" value="'+esc(customerSearch)+'" placeholder="'+(es?'Buscar por nombre…':'Search by name…')+'"><button class="btn primary" type="submit">'+(es?'Buscar':'Search')+'</button><button class="btn" type="button" data-action="customer-search-clear">'+(es?'Limpiar':'Clear')+'</button></div><div id="customer-search-suggestions" class="customer-search-suggestions">'+customerSuggestionsHTML(customerSearch)+'</div></form>'+
    (customers.length?'<div class="customer-card-grid">'+customers.map(c=>{const name=String(c.name||'').trim()||(es?'Sin nombre':'Unnamed customer');const initials=name.split(/\s+/).slice(0,2).map(part=>part.charAt(0)).join('').toLocaleUpperCase(es?'es':'en');const count=db.rentals.filter(r=>r.customerId===c.id).length;const contact=String(c.phone||c.email||'').trim();return '<button class="customer-directory-card" type="button" data-action="customer-profile" data-id="'+esc(c.id)+'" aria-label="'+esc(name)+'"><span class="customer-directory-card-top"><span class="customer-directory-initials" aria-hidden="true">'+esc(initials||'?')+'</span><span class="customer-directory-card-info"><strong>'+esc(name)+'</strong><span>'+count+' '+(count===1?(es?'alquiler':'rental'):(es?'alquileres':'rentals'))+'</span></span></span><span class="customer-directory-contact">'+esc(contact||(es?'Sin contacto registrado':'No contact recorded'))+'</span><span class="customer-directory-open">'+(es?'Ver perfil':'View profile')+' <span aria-hidden="true">→</span></span></button>'}).join('')+'</div>':'<div class="empty">'+(customerSearch?(es?'No se encontraron clientes.':'No customers found.'):t('noRecords'))+'</div>')+'</section>';
  }
  const rentals=db.rentals.filter(r=>r.customerId===customer.id).sort((a,b)=>String(b.pickup||'').localeCompare(String(a.pickup||'')));

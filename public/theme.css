@@ -212,7 +212,7 @@ body>main #auth{max-width:520px;margin:40px auto}
 @media(max-width:560px){.rental-vehicle-grid{grid-template-columns:1fr}.rental-directory-panel{padding:16px}}
 
 /* Make dashboard icons visible without depending on an image URL or color mode. */
-.dashboard-card:before{background-image:none!important;display:grid;place-items:center;font-size:22px;line-height:1;content:'▣';color:#344054;background-color:#eef2ff}
+.dashboard-card:before{display:none}
 .dashboard-card:nth-child(1):before{content:'🚗'}
 .dashboard-card:nth-child(2):before{content:'🔑'}
 .dashboard-card:nth-child(3):before{content:'💵'}
@@ -396,3 +396,21 @@ body>main #auth{max-width:520px;margin:40px auto}
 @media(prefers-color-scheme:dark){.expense-category-card{background:#202d40;border-color:#455469;color:#f8fafc}.expense-category-card:hover{background:#27384d;border-color:#a5b4fc}.expense-category-amount{color:#f8fafc}.expense-category-card small{color:#bdc8d9}.expense-category-total{border-color:#455469}}
 @media(max-width:560px){.expense-category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.expense-category-card{padding:14px;gap:10px}.expense-category-amount{font-size:22px}}
 @media(max-width:360px){.expense-category-grid{grid-template-columns:1fr}}
+
+/* Real SVG icons avoid missing font glyphs and retain contrast in both themes. */
+.dashboard-card .dashboard-icon{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:12px;margin-bottom:12px;background:#eef2ff;color:#465fff}
+.dashboard-icon svg{display:block;width:23px;height:23px}
+.dashboard-card[data-dashboard-card="rented"] .dashboard-icon{background:#e0f2fe;color:#0369a1}
+.dashboard-card[data-dashboard-card="expenses"] .dashboard-icon{background:#fff1f2;color:#be123c}
+.dashboard-card[data-dashboard-card="payments"] .dashboard-icon{background:#ecfdf3;color:#047857}
+.dashboard-card[data-dashboard-card="balance"] .dashboard-icon{background:#fff7ed;color:#b45309}
+.dashboard-card[data-dashboard-card="insurance"] .dashboard-icon{background:#f3e8ff;color:#7e22ce}
+@media(prefers-color-scheme:dark){
+ .dashboard-card .dashboard-icon{background:#29375d;color:#b4bfff}
+ .dashboard-card[data-dashboard-card="rented"] .dashboard-icon{background:#163c52;color:#7dd3fc}
+ .dashboard-card[data-dashboard-card="expenses"] .dashboard-icon{background:#4c2838;color:#fda4af}
+ .dashboard-card[data-dashboard-card="payments"] .dashboard-icon{background:#164435;color:#6ee7b7}
+ .dashboard-card[data-dashboard-card="balance"] .dashboard-icon{background:#483721;color:#fcd34d}
+ .dashboard-card[data-dashboard-card="insurance"] .dashboard-icon{background:#3b2d55;color:#d8b4fe}
+ .card:not(.dashboard-card):before{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c7d2e2' stroke-width='1.6'%3E%3Crect x='4' y='4' width='16' height='16' rx='4'/%3E%3Cpath d='M8 15v-3m4 3V8m4 7v-5'/%3E%3C/svg%3E");background-size:22px 22px;background-position:center;background-repeat:no-repeat}
+}

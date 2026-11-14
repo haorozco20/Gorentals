@@ -314,9 +314,19 @@ function loanHistory(id){
 
 
 const vehiclePhotoURLs=new Map();
+function representativeVehiclePhoto(vehicle){
+ const make=String(vehicle.make||'').toLowerCase(),model=String(vehicle.model||'').toLowerCase(),year=Number(vehicle.year||0);
+ if(make.includes('toyota')&&model.includes('corolla'))return 'https://commons.wikimedia.org/wiki/Special:FilePath/2019-2022_Toyota_Corolla.jpg?width=600';
+ if(make.includes('hyundai')&&model.includes('tucson'))return year>=2023?'https://upload.wikimedia.org/wikipedia/commons/0/0c/2023_Hyundai_Tucson_Signature_%28India%29_front_view.jpg':'https://upload.wikimedia.org/wikipedia/commons/7/75/2021_Hyundai_Tucson_Ultimate_T-GDi_MHEV_1.6.jpg';
+ if(make.includes('mitsubishi')&&model.includes('sportero'))return 'https://automart.ph/_next/image?q=75&url=https%3A%2F%2Fautomart-dev.sgp1.digitaloceanspaces.com%2Fnaw1495%2Fused-Mitsubishi-Strada-naw1495-343515.jpg&w=2720';
+ if(make.includes('mitsubishi')&&model.includes('l200'))return 'https://img.ovoiture.ma/vehicles/mitsubishi/l200/01.jpg';
+ if(make.includes('toyota')&&model.includes('raize'))return 'https://toyotaninhbinhvn.com/wp-content/uploads/2025/01/z6203442886156_ee4c57cefccc06f19e90c3b1f98ab7bf.jpg?v=1736175789';
+ return '';
+}
 function vehiclePhotoHTML(vehicle){
- const es=db.language==='es';
- return '<div class="vehicle-photo-block"><div class="vehicle-photo-frame">'+(vehicle.photoPath?'<img data-vehicle-photo-path="'+esc(vehicle.photoPath)+'" alt="'+esc(vname(vehicle))+'" width="128" height="96" hidden><span class="vehicle-photo-placeholder" aria-hidden="true">'+navIcon('vehicles')+'</span>':'<span class="vehicle-photo-placeholder" aria-hidden="true">'+navIcon('vehicles')+'</span>')+'</div><button class="mini" data-action="vehicle-photo" data-id="'+esc(vehicle.id)+'">'+(vehicle.photoPath?(es?'Cambiar foto':'Change photo'):(es?'Agregar foto':'Add photo'))+'</button><input id="vehicle-photo-file" type="file" accept="image/jpeg,image/png,image/webp" data-vehicle-id="'+esc(vehicle.id)+'" hidden><span id="vehicle-photo-feedback" class="help" role="status"></span></div>';
+ const es=db.language==='es',example=vehicle.photoPath?'':representativeVehiclePhoto(vehicle);
+ const image=vehicle.photoPath?'<img data-vehicle-photo-path="'+esc(vehicle.photoPath)+'" alt="'+esc(vname(vehicle))+'" width="128" height="96" hidden>':example?'<img src="'+esc(example)+'" loading="lazy" referrerpolicy="no-referrer" alt="'+esc(vname(vehicle))+' — '+(es?'imagen de referencia':'reference image')+'" width="128" height="96" onload="this.hidden=false;this.nextElementSibling.hidden=true" onerror="this.hidden=true;this.nextElementSibling.hidden=false" hidden>':'';
+ return '<div class="vehicle-photo-block"><div class="vehicle-photo-frame">'+image+'<span class="vehicle-photo-placeholder" aria-hidden="true">'+navIcon('vehicles')+'</span></div>'+(example?'<span class="vehicle-reference-label">'+(es?'Imagen de referencia, no es el vehículo real':'Reference photo, not the actual vehicle')+'</span>':'')+'<button class="mini" data-action="vehicle-photo" data-id="'+esc(vehicle.id)+'">'+(vehicle.photoPath?(es?'Cambiar foto':'Change photo'):(es?'Subir foto real':'Upload actual photo'))+'</button><input id="vehicle-photo-file" type="file" accept="image/jpeg,image/png,image/webp" data-vehicle-id="'+esc(vehicle.id)+'" hidden><span id="vehicle-photo-feedback" class="help" role="status"></span></div>';
 }
 async function hydrateVehiclePhotos(){
  for(const image of document.querySelectorAll('img[data-vehicle-photo-path]')){
